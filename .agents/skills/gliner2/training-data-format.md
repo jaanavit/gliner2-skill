@@ -134,15 +134,18 @@ The loader auto-detects and accepts:
 from gliner2.training.data import TrainingDataset
 
 dataset = TrainingDataset.load("train.jsonl")
-dataset.validate(strict=True, raise_on_error=True)   # also checks spans/values exist in input text
-dataset.validate_relation_consistency()               # per-relation-type field consistency
+dataset.validate(raise_on_error=True)   # checks format, required fields, AND that entity/relation values exist in the input text
+dataset.validate_relation_consistency()  # per-relation-type field consistency
 dataset.print_stats()
 ```
 
-- **Standard validation**: format correctness, required fields, label consistency.
-- **Strict validation**: additionally checks entity mentions / relation values exist in the input
-  text (case-insensitive substring match). Use during dataset creation to catch annotation
-  errors early.
+**`validate()` takes no `strict` argument — passing `strict=True` raises `TypeError`.** Confirmed
+against installed `gliner2==2.0.0`: the signature is `validate(self, raise_on_error=True)` only.
+The substring/text-exists check this file previously called "strict validation" is not a separate
+opt-in mode — `validate()` always checks that entity mentions and relation values exist in the
+input text (case-insensitive substring match) as part of its one pass. `raise_on_error=False`
+returns a report dict (`{'valid', 'invalid', 'total', 'invalid_indices', 'errors'}`) instead of
+raising, which is what you want during interactive dataset cleanup.
 
 ## Tips
 

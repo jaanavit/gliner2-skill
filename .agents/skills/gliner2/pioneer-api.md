@@ -206,6 +206,32 @@ level (raw HTTP) — not part of the OpenAI spec. `GET /v1/models` lists what yo
 way. For GLiNER2 encoder schemas, prefer the native `/inference` endpoint above — it's the more
 direct path and this skill's examples are built around it.
 
+## Pioneer CLI (`@fastino-ai/pioneer-cli`)
+
+An alternative to raw `curl` above for humans/agents with terminal access. Requires Bun 1.1.0+,
+Node.js, npm.
+
+```bash
+npm install -g @fastino-ai/pioneer-cli
+export PIONEER_API_KEY="pio_sk_..."   # or `pioneer auth login` interactively
+pioneer auth status
+```
+
+**Works:** `pioneer auth login`/`status`; `pioneer dataset list`/`get <name[:version]>`;
+`pioneer job list`/`get <id>`/`logs <id>`/`delete <id>`; `pioneer model base-models`;
+`pioneer model endpoints list`/`create`/`get`/`deploy`/`rollback`/`quality-metrics`;
+`pioneer model artifacts list`/`trained`/`deployed`/`download <job-id>`.
+
+**Does not work / missing (as of CLI `0.3.3`):** dataset create/upload and training-job creation
+are both explicitly disabled in this CLI version — `pioneer dataset --help` and
+`pioneer job --help` both say those subcommands are "temporarily hidden" and to use the Pioneer
+web app at `https://agent.pioneer.ai/` instead. This does not remove the gap documented above for
+`POST /felix/training-jobs`: the CLI has no dataset-upload path either, raw HTTP included.
+
+`pioneer model artifacts download <job-id>` is useful even if you trained via the web app: it can
+pull a completed job's checkpoint down locally, which you can then load with local
+`AutoExtractor.from_pretrained(...)` instead of depending on hosted `/inference` for that model.
+
 ## Best practices
 
 - Always send `schema` as a dict and omit `task` entirely.

@@ -5,11 +5,16 @@ description: Build GLiNER2 (gliner2 PyPI package / fastino-ai/GLiNER2) schemas a
 
 # GLiNER2
 
-## Step 0: Environment checklist — do this before anything else
+This file walks the GLiNER2 pipeline in order: **set up the environment → pick a model → route
+by task → build and run a schema → fine-tune locally (optional) → inference locally.** If you
+actually need the original GLiNER (v1) package, skip to the
+[appendix](#appendix-gliner-vs-gliner2--which-package) at the bottom instead.
+
+## 1. Set up the environment — do this before anything else
 
 Run these four checks **in order**. Stop and fix at the first failure; do not write schema code
-until all four pass. Skipping this and going straight to `pip show gliner2` / the routing table
-below is the single most common way agents burn time on this skill.
+until all four pass. Skipping this and going straight to `pip show gliner2` / picking a model is
+the single most common way agents burn time on this skill.
 
 1. **Python version first.** `python3 --version` must be **3.10+**. `gliner2`'s type hints use
    `X | None` syntax, which raises `TypeError: unsupported operand type(s) for |` on import under
@@ -20,9 +25,11 @@ below is the single most common way agents burn time on this skill.
    version, or one installed against a pre-3.10 interpreter. Likewise `pip index versions
    gliner2` can under-report the true latest release. Create a fresh venv and install there
    rather than debugging an existing site-packages install.
-3. **Install the full local-inference stack, not just the base package:**
+3. **Install the extra(s) your task needs — the base package alone is not enough for most work:**
    ```bash
-   pip install "gliner2[local]" protobuf sentencepiece
+   pip install gliner2                                   # Schema, RegexValidator, GLiNER2API -- no torch required
+   pip install "gliner2[local]" protobuf sentencepiece    # + local model inference (AutoExtractor, LoRA)
+   pip install "gliner2[train]"                           # + training (ExtractorTrainer, TrainingConfig)
    ```
    `gliner2[local]` alone is not sufficient for local inference — loading a checkpoint's
    tokenizer via `AutoExtractor.from_pretrained(...)` raises `ImportError: ... requires the
@@ -40,15 +47,18 @@ prints three warnings every time — none are errors, all are safe to ignore:
 attn_implementation='sdpa'; falling back to 'eager'...`. They look alarming on a first run but
 don't affect correctness or require any action.
 
+## 2. Pick and download a model
+
 GLiNER2 is a schema-conditioned encoder for **NER, text classification, structured/JSON
 extraction, relation extraction, and span attributes** in a single forward pass — CPU-capable,
-no LLM required. Two architectures share one public API:
+no LLM required. Two architectures share one public API, both loaded via `AutoExtractor`, which
+dispatches on the checkpoint's saved `architecture` field:
 
 - **`boundary` (GLiNER2.5)** — sparse start/end pairing, any span length within the encoded
-  window. **Default choice for new work.** Load with `AutoExtractor`. Dropping explicit span
-  enumeration is also what lets it train on and process sequences up to ~4,096 words in a
-  single forward pass — most reports/contracts/transcripts fit without chunking; see
-  [long-context.md](long-context.md) for when you still need it.
+  window. **Default choice for new work.** Dropping explicit span enumeration is also what lets
+  it train on and process sequences up to ~4,096 words in a single forward pass — most
+  reports/contracts/transcripts fit without chunking; see [long-context.md](long-context.md) for
+  when you still need it.
 - **`span` (GLiNER2 / legacy)** — fixed-width span grid. Only needed for legacy checkpoints and
   the specialty safety/PII fine-tunes.
 
@@ -60,37 +70,42 @@ model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")   # English, 
 # model = AutoExtractor.from_pretrained("fastino/gliner2.5-small-v1") # Fast / CPU / edge
 ```
 
-`AutoExtractor` dispatches on the checkpoint's saved `architecture` field, so it loads both span
-and boundary checkpoints; `GLiNER2.from_pretrained(...)` remains span-only and will not load
-GLiNER2.5 boundary checkpoints.
+`GLiNER2.from_pretrained(...)` remains span-only and will not load GLiNER2.5 boundary
+checkpoints — use `AutoExtractor` unless you specifically know you want the legacy loader.
 
-## GLiNER vs GLiNER2 — which package?
+### GLiNER2.5 boundary checkpoints
 
-This skill covers **two different PyPI packages** from the same lineage. **Default to GLiNER2**
-(`gliner2`, everything above and the rest of this table) — it's a superset: schema-driven
-multi-task extraction (NER + classification + JSON + relations + attributes in one pass), a
-cloud API, and the actively developed line. Reach for the original **GLiNER (v1)**
-(`gliner`, `gliner1-*.md` files in this same directory) only when you specifically need something
-GLiNER2 doesn't have:
+The three checkpoints ([Hub collection](https://huggingface.co/collections/fastino/gliner25-models))
+share one API, `enable_relations=True` + `enable_records=True` (every routing-table capability
+below works on all three), and a confirmed `max_len=4096` window — differing only in speed/size.
 
-| Need | Package | Start at |
+| Checkpoint | Params | Encoder | Language | Use case |
+|---|---|---|---|---|
+| `fastino/gliner2.5-small-v1` | 74M | DeBERTa-v3-xsmall | English | Fastest / CPU / edge |
+| `fastino/gliner2.5-base-v1` | 194M | DeBERTa-v3-base | English | **Default** English checkpoint |
+| `fastino/gliner2.5-multi-v1` | 287M | mDeBERTa-v3-base | Multilingual | Default multilingual checkpoint |
+
+### Legacy span checkpoints and specialty fine-tunes
+
+Sizes vary per checkpoint, not uniform:
+
+| Checkpoint | Hub size | Goal |
 |---|---|---|
-| Anything in the table below, or unsure | **GLiNER2** (default) | This file's routing table |
-| A specific `urchade/gliner_*` or `knowledgator/gliner-*` (non-fastino) checkpoint by name | GLiNER v1 | [gliner1-intro.md](gliner1-intro.md) |
-| Incremental/streaming NER over live text (append-and-revise, causal KV cache) | GLiNER v1 (`StreamingSpan`) | [gliner1-streaming.md](gliner1-streaming.md) |
-| Ray Serve production HTTP deployment with PolyLoRA multi-adapter routing | GLiNER v1 | [gliner1-serving.md](gliner1-serving.md) |
-| ONNX/OpenVINO export of a NER-only model | GLiNER v1 | [gliner1-onnx-export.md](gliner1-onnx-export.md) |
-| Implementing a brand-new architecture variant from scratch | GLiNER v1 | [gliner1-custom-architectures.md](gliner1-custom-architectures.md) |
-| Installing/pinning both packages in one project, or just want the real dependency list (not the docs site's `pip install` snippets) | Both | [gliner1-repo-and-dependencies.md](gliner1-repo-and-dependencies.md) |
+| `fastino/gliner2-base-v1` | 0.2B | Legacy span, English, multi-task |
+| `fastino/gliner2-large-v1` | 0.5B | Legacy span, higher accuracy, English |
+| `fastino/gliner2-multi-v1` | 0.3B | Legacy span, multilingual, multi-task |
+| `fastino/gliguard-LLMGuardrails-300M` | 0.2B | LLM prompt/response guardrails |
+| `fastino/gliner2-privacy-filter-PII-multi` | 0.3B | PII redaction — see caveat in [safety-pii.md](safety-pii.md) |
+| `fastino/GLiNER2-Guardrails-PII-Multi` | 0.3B | Guardrails + PII combined |
 
-The GLiNER v1 files are a self-contained sub-tree ([gliner1-intro.md](gliner1-intro.md) is their
-entry point/router) — they don't feed into `route_usecase.py` below, which is scoped to picking a
-GLiNER2 *method*, not a package.
+Sizes are each checkpoint's Hub "Model size" badge — trust the badge over a card's prose if they
+disagree (some cards predate a later retrain). Full model cards:
+[GLiNER2 README](https://github.com/fastino-ai/GLiNER2#-available-models).
 
-## Route by use case (GLiNER2)
+## 3. Route by task
 
-Start here. Each row links to a reference file with full API detail, parameters, and worked
-examples — read only the file(s) the task needs.
+Each row links to a reference file with full API detail, parameters, and worked examples — read
+only the file(s) the task needs.
 
 | I need to... | Use | Reference |
 |---|---|---|
@@ -108,11 +123,23 @@ examples — read only the file(s) the task needs.
 | Process a document longer than the model's context window | `*_long` methods (`extract_entities_long`, `extract_long`, ...) | [long-context.md](long-context.md) |
 | Redact PII or moderate LLM prompts/responses | Specialty checkpoints (GLiGuard, PII filter) | [safety-pii.md](safety-pii.md) |
 | Speed up inference (fp16, `torch.compile`, FlashDeBERTa) or extract CJK text (word splitters) | `quantize=True`, `compile=True`, `word_splitter="char"`, `use_flashdeberta=True` | [performance-tuning.md](performance-tuning.md) |
-| Measure whether a schema/model is actually good on your data — precision/recall/F1, comparing zero-shot vs. fine-tuned | Held-out eval set + task metrics (not `training.md`'s loss-based `eval_strategy`) | [evaluation.md](evaluation.md) |
-| Build a JSONL training set | `InputExample`, JSONL schema | [training-data-format.md](training-data-format.md) |
-| Fine-tune / train a model from scratch or on your data | `ExtractorTrainer`, `TrainingConfig` | [training.md](training.md) |
-| Train a small parameter-efficient adapter for one domain | LoRA (`use_lora=True`) | [lora-adapters.md](lora-adapters.md) |
-| Swap between domain adapters at inference time | `load_adapter()` / `unload_adapter()` | [adapter-switching.md](adapter-switching.md) |
+
+Zero-shot accuracy insufficient for one of these? That's not a routing problem — see
+[§5 Fine-tune locally](#5-fine-tune-locally) below rather than switching methods.
+
+### Programmatic routing
+
+For a non-agent caller (CLI, docs bot, pre-flight check), [`route_usecase.py`](route_usecase.py)
+scores a free-text task description against this table's rows using a live GLiNER2 classifier —
+treat its output as a ranked shortlist, not ground truth. `test_route_usecase.py` keeps
+`USE_CASES` in sync with every reference file in this directory (including §5's); tuning notes
+live in that file's own docstring.
+
+## 4. Build and run a schema
+
+**Descriptions beat bare label lists.** Passing `{"label": "description"}` instead of
+`["label"]` consistently improves accuracy — true for entities, classifications, relations, and
+JSON fields alike. This is the single highest-leverage accuracy lever across every task type.
 
 **Decision shortcuts:**
 
@@ -123,31 +150,50 @@ examples — read only the file(s) the task needs.
   build with `model.create_schema()....` and call `model.extract(text, schema)`.
 - One label legally constrains another, or you need a globally consistent entity–relation graph
   → do **not** just combine independent calls; independent decoding cannot enforce cross-task
-  consistency. Use `Classifier` or `JointIE` respectively (see table above).
+  consistency. Use `Classifier` or `JointIE` respectively (see routing table above).
 - Text may exceed the model's window (reports, contracts, transcripts, logs) → use the `*_long`
   variant. Never rely on `max_len` truncation for this — it silently drops the rest of the file.
-- Zero-shot accuracy plateaued on your own data, **measured** via
-  [evaluation.md](evaluation.md) rather than eyeballed → label ~100-200 of the actual misses
-  ([training-data-format.md](training-data-format.md)) and fine-tune
-  ([training.md](training.md)) or train a LoRA adapter ([lora-adapters.md](lora-adapters.md)) —
-  the biggest accuracy lever once description-tuning is exhausted. Don't assume a specialized
-  domain needs this by default though: GLiNER2.5's training data spans many domains by design —
-  measure before fine-tuning, not instead of it.
 
-### Programmatic routing
+```python
+# Quick method -- one task, simplest path
+result = model.extract_entities(
+    "Apple hired Jane Doe.", {"company": "business name", "person": "full name"}
+)
+# {'entities': {'company': ['Apple'], 'person': ['Jane Doe']}}
 
-For a non-agent caller (CLI, docs bot, pre-flight check), [`route_usecase.py`](route_usecase.py)
-scores a free-text task description against this table's rows using a live GLiNER2 classifier —
-treat its output as a ranked shortlist, not ground truth. `test_route_usecase.py` keeps
-`USE_CASES` in sync with the table above; tuning notes live in that file's own docstring.
+# create_schema() chaining -- 2+ tasks over the same text in one pass
+schema = (
+    model.create_schema()
+    .entities({"company": "business name"})
+    .classification("sentiment", ["positive", "negative", "neutral"])
+)
+result = model.extract("Apple's new office is fantastic.", schema)
+# {'entities': {'company': ['Apple']}, 'sentiment': 'positive'}
+```
 
-## Cross-cutting mechanics (apply almost everywhere)
+## 5. Fine-tune locally
 
-**Descriptions beat bare label lists.** Passing `{"label": "description"}` instead of
-`["label"]` consistently improves accuracy — true for entities, classifications, relations, and
-JSON fields alike. This is the single highest-leverage accuracy lever across every task type.
+Only worth doing once zero-shot accuracy is **measured**, not eyeballed, and plateaus after
+description-tuning (§4) — the biggest remaining accuracy lever, but don't assume a specialized
+domain needs it by default: GLiNER2.5's training data spans many domains by design, so measure
+before fine-tuning, not instead of it.
 
-**Output shape is controlled by two flags present on nearly every method:**
+1. Measure zero-shot precision/recall/F1 on a held-out set, and compare any fine-tuned candidate
+   on the same set before shipping either → [evaluation.md](evaluation.md)
+2. If it plateaus, label ~100–200 of the actual misses into a JSONL training set →
+   [training-data-format.md](training-data-format.md)
+3. Fine-tune with `ExtractorTrainer`/`TrainingConfig` → [training.md](training.md), or train a
+   small parameter-efficient adapter per domain instead of a full checkpoint (`use_lora=True`) →
+   [lora-adapters.md](lora-adapters.md)
+4. If you trained multiple domain adapters, swap between them at inference time without
+   reloading the base model (`load_adapter()`/`unload_adapter()`) →
+   [adapter-switching.md](adapter-switching.md)
+
+## 6. Inference locally
+
+Everything above runs through a locally loaded `AutoExtractor` by default — no network call,
+your model and data stay on the machine that loaded them. Output shape and volume are controlled
+by flags present on nearly every method:
 
 - `include_confidence=True` — text becomes `{'text': ..., 'confidence': 0.92}`
 - `include_spans=True` — adds `{'start': int, 'end': int}` (character offsets, half-open
@@ -168,44 +214,33 @@ relations, and classifications — safe to iterate without existence checks.
 `batch_classify_text`, ...) take `batch_size=` and return one result per input, same shape as the
 singular call.
 
-## Setup
+Don't want to load a model locally at all? [api-access.md](api-access.md) (`GLiNER2.from_api()`)
+and [pioneer-api.md](pioneer-api.md) (raw Pioneer HTTP, plus hosted training) give the same
+method surface over a cloud call instead.
 
-See **Step 0** above for the required environment checklist (Python 3.10+, clean venv, smoke
-import) before installing anything below.
+## Appendix: GLiNER vs GLiNER2 — which package?
 
-```bash
-pip install gliner2                              # Schema, RegexValidator, GLiNER2API — no torch required
-pip install "gliner2[local]" protobuf sentencepiece  # + local model inference (AutoExtractor, LoRA)
-pip install "gliner2[train]"                      # + training (ExtractorTrainer, TrainingConfig)
-```
+This skill covers **two different PyPI packages** from the same lineage. Everything in §§1–6
+above is **GLiNER2** (`gliner2`) — it's a superset: schema-driven multi-task extraction (NER +
+classification + JSON + relations + attributes in one pass), a cloud API, and the actively
+developed line. Reach for the original **GLiNER (v1)** (`gliner`, `gliner1-*.md` files in this
+same directory) only when you specifically need something GLiNER2 doesn't have:
 
-## Model catalog quick pick
-
-The three GLiNER2.5 boundary checkpoints ([Hub collection](https://huggingface.co/collections/fastino/gliner25-models))
-share one API, `enable_relations=True` + `enable_records=True` (every routing-table capability
-works on all three), and a confirmed `max_len=4096` window — differing only in speed/size. Load
-with `AutoExtractor`; `GLiNER2`/`SpanExtractor` is a checkpoint mismatch, not a fallback.
-
-| Checkpoint | Params | Encoder | Language | Use case |
-|---|---|---|---|---|
-| `fastino/gliner2.5-small-v1` | 74M | DeBERTa-v3-xsmall | English | Fastest / CPU / edge |
-| `fastino/gliner2.5-base-v1` | 194M | DeBERTa-v3-base | English | **Default** English checkpoint |
-| `fastino/gliner2.5-multi-v1` | 287M | mDeBERTa-v3-base | Multilingual | Default multilingual checkpoint |
-
-Legacy span checkpoints and specialty fine-tunes — sizes vary per checkpoint, not uniform:
-
-| Checkpoint | Hub size | Goal |
+| Need | Package | Start at |
 |---|---|---|
-| `fastino/gliner2-base-v1` | 0.2B | Legacy span, English, multi-task |
-| `fastino/gliner2-large-v1` | 0.5B | Legacy span, higher accuracy, English |
-| `fastino/gliner2-multi-v1` | 0.3B | Legacy span, multilingual, multi-task |
-| `fastino/gliguard-LLMGuardrails-300M` | 0.2B | LLM prompt/response guardrails |
-| `fastino/gliner2-privacy-filter-PII-multi` | 0.3B | PII redaction — see caveat in [safety-pii.md](safety-pii.md) |
-| `fastino/GLiNER2-Guardrails-PII-Multi` | 0.3B | Guardrails + PII combined |
+| Anything in §§1–6 above, or unsure | **GLiNER2** (default) | §3's routing table |
+| A specific `urchade/gliner_*` or `knowledgator/gliner-*` (non-fastino) checkpoint by name | GLiNER v1 | [gliner1-intro.md](gliner1-intro.md) |
+| Incremental/streaming NER over live text (append-and-revise, causal KV cache) | GLiNER v1 (`StreamingSpan`) | [gliner1-streaming.md](gliner1-streaming.md) |
+| Ray Serve production HTTP deployment with PolyLoRA multi-adapter routing | GLiNER v1 | [gliner1-serving.md](gliner1-serving.md) |
+| ONNX/OpenVINO export of a NER-only model | GLiNER v1 | [gliner1-onnx-export.md](gliner1-onnx-export.md) |
+| Implementing a brand-new architecture variant from scratch | GLiNER v1 | [gliner1-custom-architectures.md](gliner1-custom-architectures.md) |
+| Installing/pinning both packages in one project, or just want the real dependency list (not the docs site's `pip install` snippets) | Both | [gliner1-repo-and-dependencies.md](gliner1-repo-and-dependencies.md) |
 
-Sizes are each checkpoint's Hub "Model size" badge — trust the badge over a card's prose if they
-disagree (some cards predate a later retrain). Full model cards:
-[GLiNER2 README](https://github.com/fastino-ai/GLiNER2#-available-models).
+The GLiNER v1 files are a self-contained sub-tree ([gliner1-intro.md](gliner1-intro.md) is their
+entry point/router) — they don't feed into `route_usecase.py`, which is scoped to picking a
+GLiNER2 *method*, not a package.
+
+---
 
 Maintaining or extending this skill (new topic files, naming conventions, install elsewhere) is
 covered in [README.md](README.md), not here — that's a skill-maintenance concern, not something

@@ -11,13 +11,10 @@ pip install gliner2
 export PIONEER_API_KEY="your-api-key-here"   # get one at https://gliner.pioneer.ai
 ```
 
-**The SDK's hardcoded default host is dead — always pass `api_base_url` explicitly.**
-`GLiNER2API.DEFAULT_BASE_URL` (used whenever `from_api()` is called with no `api_base_url`) is
-`https://api.fastino.ai`, not `https://api.pioneer.ai`. That default host is decommissioned
-(confirmed: expired TLS cert, and `/felix/training-jobs` there 404s with Vercel's
-`DEPLOYMENT_NOT_FOUND`) — `from_api()` with no override will fail outright. The real, live
-endpoint is `https://api.pioneer.ai` (verified working, exact match to this file's documented
-`/inference` response shape). Always pass it explicitly, or set `GLINER2_API_BASE_URL`:
+**Works:** `https://api.pioneer.ai` — matches this file's documented `/inference` shape.
+**Does not work:** `GLiNER2API.DEFAULT_BASE_URL` (`https://api.fastino.ai`) — the SDK's default
+host when `from_api()` is called with no `api_base_url`. Expired TLS cert, 404s. Always pass
+`api_base_url` explicitly, or set `GLINER2_API_BASE_URL`:
 
 ```python
 from gliner2 import GLiNER2

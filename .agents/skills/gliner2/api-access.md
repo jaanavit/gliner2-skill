@@ -11,11 +11,6 @@ pip install gliner2
 export PIONEER_API_KEY="your-api-key-here"   # get one at https://gliner.pioneer.ai
 ```
 
-**Works:** `https://api.pioneer.ai` — matches this file's documented `/inference` shape.
-**Does not work:** `GLiNER2API.DEFAULT_BASE_URL` (`https://api.fastino.ai`) — the SDK's default
-host when `from_api()` is called with no `api_base_url`. Expired TLS cert, 404s. Always pass
-`api_base_url` explicitly, or set `GLINER2_API_BASE_URL`:
-
 ```python
 from gliner2 import GLiNER2
 

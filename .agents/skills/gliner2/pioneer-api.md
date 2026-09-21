@@ -31,6 +31,44 @@ curl "https://api.pioneer.ai/base-models?supports_inference=true&task_type=encod
 `model_id` is either a base model from that catalog or a training-job UUID from
 `POST /felix/training-jobs` to call your own fine-tune. Current encoder catalog:
 
+**`/felix/training-jobs` is real but unsupported by this skill/SDK — no client code wraps it,
+and part of its input is undocumented.** There's no `gliner2` SDK method for it (confirmed —
+nothing named `felix`/`training_job` exists anywhere in the installed package); you must call it
+with raw HTTP. Reverse-engineered from a `POST` with an empty body and from a `GET` job listing,
+using a real key against `https://api.pioneer.ai`:
+
+```bash
+curl -X POST https://api.pioneer.ai/felix/training-jobs \
+  -H "X-API-Key: $PIONEER_API_KEY" -H "Content-Type: application/json" \
+  -d '{
+    "model_name": "my-classifier-v1",
+    "base_model": "fastino/gliner2-base-v1",
+    "datasets": [{"name": "my-dataset", "version": "1"}],
+    "nr_epochs": 10,
+    "learning_rate": 0.0001,
+    "batch_size": 8,
+    "validation_data_percentage": 0.2
+  }'
+```
+
+- **Required** (an empty-body `POST` returns `422` naming these explicitly): `model_name`,
+  `base_model`, `datasets`.
+- **Observed optional fields** (from an existing job's shape, not confirmed exhaustive):
+  `validation_data_percentage`, `nr_epochs`, `learning_rate`, `batch_size`, `seed`,
+  `instance_type`, `task_type`, `training_type`, `project_id`, and (for classification jobs)
+  `labels`.
+- **`datasets` takes `{name, version}` references, not raw text/files** — your data must
+  already exist as a registered dataset in Pioneer first. **How a dataset gets created/uploaded
+  is not documented anywhere in this skill or the SDK** — this is the actual blocker to using
+  this endpoint, not the training-job call itself.
+- `GET /felix/training-jobs` lists your jobs with `status`/`normalized_status`/
+  `is_terminal_status`, and `trained_model_path` + `job_reference` once complete.
+- Once a job completes, its `id` is exactly the UUID to pass as `model_id` at `/inference` above.
+
+Given the missing dataset-registration step and zero SDK support, prefer the fully-documented,
+SDK-native local path in [training.md](training.md) for fine-tuning; treat this endpoint as a
+known gap, not a supported workflow, until the dataset-upload step is found and documented.
+
 | `model_id` | Notes |
 |---|---|
 | `fastino/gliner2-base-v1` | Legacy span, English |

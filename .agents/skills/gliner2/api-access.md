@@ -11,11 +11,19 @@ pip install gliner2
 export PIONEER_API_KEY="your-api-key-here"   # get one at https://gliner.pioneer.ai
 ```
 
+**The SDK's hardcoded default host is dead — always pass `api_base_url` explicitly.**
+`GLiNER2API.DEFAULT_BASE_URL` (used whenever `from_api()` is called with no `api_base_url`) is
+`https://api.fastino.ai`, not `https://api.pioneer.ai`. That default host is decommissioned
+(confirmed: expired TLS cert, and `/felix/training-jobs` there 404s with Vercel's
+`DEPLOYMENT_NOT_FOUND`) — `from_api()` with no override will fail outright. The real, live
+endpoint is `https://api.pioneer.ai` (verified working, exact match to this file's documented
+`/inference` response shape). Always pass it explicitly, or set `GLINER2_API_BASE_URL`:
+
 ```python
 from gliner2 import GLiNER2
 
-extractor = GLiNER2.from_api()                       # reads PIONEER_API_KEY
-# or: extractor = GLiNER2.from_api(api_key="...")
+extractor = GLiNER2.from_api(api_base_url="https://api.pioneer.ai")   # reads PIONEER_API_KEY for the key
+# or: extractor = GLiNER2.from_api(api_key="...", api_base_url="https://api.pioneer.ai")
 
 # torch-free alternative for local batch partitioning / long-doc scanning without loading a model
 from gliner2 import API, InputExample, Schema, TrainingDataset

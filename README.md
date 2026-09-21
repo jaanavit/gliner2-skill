@@ -7,6 +7,23 @@ extraction, span attributes, Joint IE, long-context, training, and known zero-sh
 ## Install
 
 ```bash
+npx skills add jaanavit/gliner2-skill
+```
+
+Non-interactive / CI-friendly (installs to Cursor in the current project):
+
+```bash
+npx skills add jaanavit/gliner2-skill -a cursor -y
+```
+
+Use `-a claude-code` or `-a codex` for other agents, `-g` to install globally instead of
+per-project, or `--list` to preview the skill without installing. See
+[skills.sh](https://www.npmjs.com/package/skills) for the full CLI.
+
+<details>
+<summary>Manual install (no npx)</summary>
+
+```bash
 git clone https://github.com/jaanavit/gliner2-skill.git /tmp/gliner2-skill
 mkdir -p .agents/skills
 cp -R /tmp/gliner2-skill/.agents/skills/gliner2 .agents/skills/gliner2
@@ -15,6 +32,8 @@ rm -rf /tmp/gliner2-skill
 
 Claude Code reads `.claude/skills/` instead — use that path, or symlink:
 `ln -s .agents/skills/gliner2 .claude/skills/gliner2`.
+
+</details>
 
 ## Use
 

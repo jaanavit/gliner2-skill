@@ -130,12 +130,11 @@ directly (not just checking confidence) whenever an instance might legitimately 
 field.
 
 **`anchor=` is not a guaranteed fix for mis-pairing — it can make a field strictly worse than the
-plain call.** On a two-listing real-estate extraction where the plain `extract_json()` call
-already paired every field correctly, switching to `.structure(mode="natural", anchor="price")`
-returned `null` for `beds`/`baths` on **both** listings instead of the correct values the plain
-call already had. Anchor mode is worth trying when the plain call demonstrably mis-pairs fields
-on your input, but always compare its output against the plain call's on the same input rather
-than switching to it by default — it is not a strict improvement.
+plain call.** Switching to `.structure(mode="natural", anchor=...)` can return `null` for fields
+the plain `extract_json()` call already extracted correctly, on the exact multi-instance input
+the anchor mode is meant to fix. Anchor mode is worth trying when the plain call demonstrably
+mis-pairs fields on your input, but always compare its output against the plain call's on the
+same input rather than switching to it by default — it is not a strict improvement.
 
 ## Schema builder — only for multi-task scenarios
 

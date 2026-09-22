@@ -190,11 +190,10 @@ error to a caller — this is normal for any model, not just specialty checkpoin
 answers in well under 200ms once warm.
 
 **A `503` from a specific fine-tuned job's `model_id` (not a catalog base model) can be permanent,
-not cold-start.** Calling `/inference` with a real, `status="deployed"`/`is_deployable=true`
-training-job UUID as `model_id` can return `503 {"detail": "GLiNER Modal HTTP 500"}` on every
-retry — confirmed against 4 real requests over 50+ seconds with no change, while the same key
-calling a catalog `model_id` (e.g. `fastino/gliner2-base-v1`) succeeded immediately. This looks
-identical to a slow cold start from the caller's side and will retry forever without ever
+not cold-start.** A `status="deployed"`/`is_deployable=true` training-job UUID passed as
+`model_id` can return `503 {"detail": "GLiNER Modal HTTP 500"}` on every retry indefinitely, even
+while catalog `model_id`s (e.g. `fastino/gliner2-base-v1`) on the same key succeed normally. This
+looks identical to a slow cold start from the caller's side and will retry forever without ever
 succeeding. If a fine-tuned job's `model_id` keeps 503ing well past a normal cold-start window,
 treat it as a dead deployment rather than retrying indefinitely — re-check `GET
 /felix/training-jobs/{job_id}` for its current status, or retrain/redeploy the job.

@@ -107,3 +107,8 @@ See [combined-schemas.md](combined-schemas.md) for richer multi-task composition
    relation is silently dropped** — resolve known pronouns from structured metadata you already
    have (e.g. regex-substitute `"me"` with the sender's name from an email header) before calling
    `extract_relations`; push resolution upstream rather than expecting the model to do it.
+8. **Repeated subjects and objects can produce Cartesian all-pairs relations** — e.g. two
+   founders and two companies in one document may yield all four pairings. Pre-segment by
+   sentence/section when relations are local; use typed [Joint IE](joint-ie.md) when endpoint
+   types and graph consistency matter; and validate co-occurrence or domain constraints before
+   writing relations to a knowledge base.

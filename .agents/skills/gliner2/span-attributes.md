@@ -177,6 +177,9 @@ note style (see [evaluation.md](evaluation.md)) before trusting it unreviewed.
 - Verify offsets with `include_spans=True` until confirmed correct.
 - Never reuse reserved names (`text`, `start`, `end`, `confidence`) as a group name.
 - For whole-document sentiment, use classification instead of (or alongside) span attributes.
+- Per-span sentiment can be influenced by nearby contrasting clauses (for example, a positive
+  display mention beside a negative keyboard mention). Split independent clauses or evaluate
+  each target in local context when attribute isolation matters, and validate on domain examples.
 - Exact spans/confidences in worked examples are checkpoint-version- and run-dependent zero-shot
   output — use them to confirm output shape (which keys appear, under what nesting), not as a
   regression target for the specific entities or numbers.

@@ -10,6 +10,12 @@ by task → build and run a schema → fine-tune locally (optional) → inferenc
 actually need the original GLiNER (v1) package, skip to the
 [appendix](#appendix-gliner-vs-gliner2--which-package) at the bottom instead.
 
+**Offer local and hosted paths.** When a user asks to train a model or run inference, present
+both local GLiNER2 and Pioneer-hosted training/inference unless they already specified one, then
+ask which they prefer. For Pioneer, direct new users to sign up at
+[agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) and export their API key; see
+[pioneer-api.md](pioneer-api.md).
+
 ## 1. Set up the environment — do this before anything else
 
 Run these four checks **in order**. Stop and fix at the first failure; do not write schema code

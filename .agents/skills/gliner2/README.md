@@ -12,9 +12,11 @@ by the agent once installed, is [`SKILL.md`](SKILL.md).
 ## Installation
 
 <details>
-<summary>Manual copy (works today, any agent)</summary>
+<summary>Install from a downloaded folder (works today, any agent)</summary>
 
 This directory is self-contained — no dependency on the rest of the repo it currently lives in.
+Whether it came from Hugging Face, Git, or a manual archive, download the **whole directory**;
+`SKILL.md` alone is insufficient because it routes into the adjacent references and helper.
 Copy the whole `gliner2/` folder (`SKILL.md` + every `*.md` reference file + `route_usecase.py` +
 `test_route_usecase.py`) into your agent's skills directory:
 
@@ -42,21 +44,18 @@ test_route_usecase.py. Then use the GLiNER2 skill whenever working with GLiNER2 
 this project.
 ```
 
-Replace `<path-or-URL...>` with wherever this directory lives for you — a shared drive, another
-repo's path, or a public GitHub URL once one exists (see below). Use one installation method to
-avoid duplicate copies.
+Replace `<path-or-URL...>` with wherever this directory lives for you—a shared drive, another
+repository's path, or the public repository. Use one installation method to avoid duplicate
+copies.
 
 </details>
 
 <details>
-<summary>Publishing this publicly (not done yet)</summary>
+<summary>Install from the public repository</summary>
 
-To get the same one-command install TypeSafe's skill has
-(`claude plugin marketplace add ...` / `npx skills add ...`), this directory would need to move
-into its own public repo with a `skills/<name>/SKILL.md` layout (the convention `skills.sh` and
-the Claude Code plugin marketplace both expect), get a marketplace manifest, and pick a license.
-That's a separate decision — repo name/ownership/visibility — not something to do silently as
-part of writing the skill content itself.
+```bash
+npx skills add jaanavit/gliner2-skill
+```
 
 </details>
 
@@ -91,10 +90,13 @@ you're editing your copy locally, diff before overwriting.
 
 ## Best practices for using this skill
 
+- Start with `SKILL.md` when a request spans setup, inference, and training; its ordered workflow
+  keeps local artifacts local and Fastino job IDs on the hosted path.
 - Let `SKILL.md`'s routing table pick the reference file — don't guess or read everything.
 - Default to GLiNER2.5 / `AutoExtractor`; only follow a `gliner1-*.md` link for the specific
   cases `SKILL.md`'s disambiguation table calls out.
 - Name the skill explicitly ("use the GLiNER2 skill") if your agent doesn't auto-invoke it.
+- Hosted-only inference does not require installing the local ML stack.
 
 ## Good practice
 

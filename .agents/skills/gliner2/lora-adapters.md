@@ -15,8 +15,9 @@ Full fine-tuning:  legal 450MB + medical 450MB + financial 450MB = 1.35 GB
 LoRA adapters:     base 450MB + legal 5MB + medical 5MB + financial 5MB = 465 MB (~65% less)
 ```
 
-Also: ~2–3x faster training (only ~0.1–5% of parameters are trainable) and lower GPU memory.
-Loading a saved checkpoint back depends on `save_adapter_only` — see below.
+Also: ~2–3x faster training (only ~0.1–5% of parameters are trainable), lower GPU memory, and
+small adapter-only checkpoints can be swapped across domains without duplicating the base
+model. Loading a saved checkpoint back depends on `save_adapter_only` — see below.
 
 ## Basic LoRA training
 
@@ -33,7 +34,7 @@ config = TrainingConfig(
     lora_alpha=32.0,           # scaling factor, conventionally 2*r
     lora_dropout=0.1,          # regularization
     lora_target_modules=["encoder"],
-    save_adapter_only=True,    # save only the adapter (~2-10MB), not the full model
+    save_adapter_only=True,    # save only the adapter; reload this base before load_adapter(path)
     task_lr=5e-4,              # used for LoRA + task heads; encoder_lr is ignored when LoRA is enabled
     fp16=True, eval_strategy="epoch", save_best=True,
 )
@@ -60,6 +61,10 @@ Which call is correct depends on how the checkpoint was saved:
 Calling `AutoExtractor.from_pretrained()` directly on an adapter-only checkpoint's path is the
 wrong call for that save mode — match the loading call to how `save_adapter_only` was actually
 set during training, not the other way around.
+
+Adapter-only serialization varies by GLiNER2 version: current trainer output is PEFT-native
+(`adapter_model.safetensors`), while legacy adapter directories use
+`adapter_weights.safetensors`. In both cases the directory is not a standalone base model.
 
 ## LoRA parameters
 
@@ -155,10 +160,10 @@ Then load/swap with `model.load_adapter(path)` — see [adapter-switching.md](ad
 2. Target attention layers first (`["encoder.query", "encoder.key", "encoder.value"]`); add
    `"encoder.dense"` or task heads if needed.
 3. Use `task_lr` in `5e-4`–`1e-3` for LoRA.
-4. `save_adapter_only=True` almost always, for the storage savings — but that means the
-   checkpoint is adapter-only, not pre-merged: load it with `model.load_adapter(path)` on an
-   already-loaded base model (see "Loading a saved checkpoint" above), not
-   `AutoExtractor.from_pretrained(path)` directly.
+4. Prefer `save_adapter_only=True` when one base serves several domains. Reload the exact base
+   checkpoint and attach the adapter; do not call `AutoExtractor.from_pretrained(path)` directly
+   on an adapter-only directory. Use `save_adapter_only=False` when a standalone full/merged
+   checkpoint is required.
 5. Version and record adapter metadata (rank, alpha, training date, sample count, eval F1) per
    adapter directory so you can compare revisions later.
 

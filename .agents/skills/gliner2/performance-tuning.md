@@ -4,6 +4,26 @@ Runtime knobs that change *how fast* or *on what hardware* a model runs, without
 extraction method or schema you use. None of these require re-downloading a checkpoint or
 retraining.
 
+## Explicit device placement
+
+Choose the runtime device before loading and pass it explicitly; do not assume a Hub load lands
+on the GPU:
+
+```python
+import torch
+from gliner2 import AutoExtractor
+
+device = "cuda" if torch.cuda.is_available() else (
+    "mps" if torch.backends.mps.is_available() else "cpu"
+)
+model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1", map_location=device)
+print("GLiNER2 device:", next(model.parameters()).device)
+```
+
+Verify the reported parameter device before benchmarking or serving. The quantization and
+compilation options below are GPU-oriented; explicit CPU or MPS placement does not imply those
+optimizations are appropriate.
+
 ## CPU / no-GPU deployments
 
 The knobs below are framed for GPU (`quantize`/`compile` examples use `map_location="cuda"`,

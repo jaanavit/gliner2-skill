@@ -22,7 +22,7 @@ examples = [
     InputExample(text="Apple released iPhone 15.", entities={"company": ["Apple"], "product": ["iPhone 15"]}),
 ]
 
-model = AutoExtractor.from_pretrained("fastino/gliner2-base-v1")   # or fastino/gliner2.5-base-v1 for boundary
+model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")  # default boundary checkpoint
 config = TrainingConfig(output_dir="./output", num_epochs=10, batch_size=8, encoder_lr=1e-5, task_lr=5e-4)
 
 trainer = ExtractorTrainer(model, config)
@@ -51,7 +51,7 @@ train_data, val_data, _ = dataset.split(train_ratio=0.8, val_ratio=0.2, test_rat
 train_data.save("train.jsonl")
 val_data.save("val.jsonl")
 
-model = AutoExtractor.from_pretrained("fastino/gliner2-base-v1")
+model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
 config = TrainingConfig(
     output_dir="./ner_model", num_epochs=15, batch_size=16, encoder_lr=1e-5, task_lr=5e-4,
     warmup_ratio=0.1, scheduler_type="cosine", fp16=True,

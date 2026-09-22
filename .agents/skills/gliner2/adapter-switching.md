@@ -10,7 +10,7 @@ For training adapters in the first place, see [lora-adapters.md](lora-adapters.m
 ```python
 from gliner2 import AutoExtractor
 
-model = AutoExtractor.from_pretrained("fastino/gliner2-base-v1")   # load base once
+model = AutoExtractor.from_pretrained("fastino/gliner2-base-v1")   # exact base used to train adapters
 
 model.load_adapter("./legal_adapter")     # load an adapter (auto-unloads any previous one)
 model.extract_entities("Apple sued Google", ["company"])

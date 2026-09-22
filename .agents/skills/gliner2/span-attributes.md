@@ -115,6 +115,21 @@ schema = (
 For documents longer than the model window, use `extract_long` with the same schema — see
 [long-context.md](long-context.md).
 
+## Batch inference
+
+Run the same attribute schema over several local inputs with `batch_extract`; results preserve
+input order:
+
+```python
+results = model.batch_extract(
+    ["The camera is excellent.", "The battery is disappointing."],
+    schema,
+    batch_size=8,
+    include_spans=True,
+    include_confidence=True,
+)
+```
+
 ## Reading the output
 
 | `include_spans` | `include_confidence` | Entity object |

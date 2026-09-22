@@ -77,6 +77,36 @@ def test_gliner1_files_are_linked_from_skill_or_its_own_router() -> None:
         assert linked, f"{reference} is not linked from SKILL.md or gliner1-intro.md"
 
 
+def test_markdown_has_no_invalid_validate_strict_call() -> None:
+    """Copy-paste examples must use TrainingDataset.validate's real signature."""
+    skill_dir = Path(__file__).parent
+    offenders = [
+        path.name
+        for path in skill_dir.glob("*.md")
+        if "validate(strict=" in path.read_text()
+    ]
+    assert offenders == []
+
+
+def test_markdown_has_no_removed_native_inference_endpoint() -> None:
+    """Hosted examples must use the OpenAI-compatible inference surface."""
+    skill_dir = Path(__file__).parent
+    stale_fragments = ("api.pioneer.ai/inference", "POST /inference", "`/inference`")
+    offenders = [
+        path.name
+        for path in skill_dir.glob("*.md")
+        if any(fragment in path.read_text() for fragment in stale_fragments)
+    ]
+    assert offenders == []
+
+
+def test_skill_documents_hosted_bypass_and_provenance_boundary() -> None:
+    """The main router must not force local setup or upload local checkpoints."""
+    skill_md = (Path(__file__).parent / "SKILL.md").read_text()
+    assert "For a **hosted-only** path, skip the local checks" in skill_md
+    assert "A local checkpoint cannot be uploaded" in skill_md
+
+
 def test_route_sorts_by_descending_confidence() -> None:
     model = StubModel(
         [

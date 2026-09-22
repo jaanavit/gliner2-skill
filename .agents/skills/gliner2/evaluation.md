@@ -1,7 +1,7 @@
 # Evaluation
 
 How to measure whether a GLiNER2 schema or model is actually good on your data — a held-out
-eval set, task-appropriate metrics, and comparing zero-shot vs. fine-tuned before you ship
+validation/test split, task-appropriate metrics, and comparing zero-shot vs. fine-tuned before you ship
 either one. GLiNER2's own tutorials don't cover this; there is no upstream tutorial to mirror
 here, so treat this file as this skill's own addition rather than a condensed source doc.
 
@@ -13,22 +13,38 @@ converge," not "is this good enough to ship." This file covers the latter: task-
 computed over a labeled held-out set, for a zero-shot model or a fine-tuned one, before a
 deploy decision.
 
-## Build a held-out eval set
+## Build validation and held-out test sets
 
-Same JSONL shape as [training-data-format.md](training-data-format.md), but never touched
-during training or threshold tuning:
+Use the same JSONL shape as [training-data-format.md](training-data-format.md). Tune descriptions,
+thresholds, and model choices on validation data; reserve the test set for the final comparison:
 
 ```python
 from gliner2.training.data import TrainingDataset
 
 dataset = TrainingDataset.load("labeled.jsonl")
 train, val, test = dataset.split(train_ratio=0.7, val_ratio=0.15, test_ratio=0.15, shuffle=True, seed=42)
-test.save("eval.jsonl")   # frozen -- never trained on, never used to pick a threshold
+val.save("validation.jsonl")  # tune descriptions, thresholds, and model choices here
+test.save("test.jsonl")       # frozen -- use only for the final comparison
 ```
 
-Include the failure cases that motivated fine-tuning in the first place. An eval set that's
+Include the failure cases that motivated fine-tuning in the first place. A test set that's
 mostly easy examples can't distinguish a zero-shot model from a fine-tuned one — both will
 score >95% and the comparison tells you nothing.
+
+## Train-or-not decision
+
+1. Freeze the test set.
+2. Tune label/field descriptions and thresholds on validation data.
+3. Run the base checkpoint on the frozen test set and compare the result with the product's
+   precision/recall/F1 target.
+4. If it meets the target, keep base inference. Do not fine-tune merely because training is
+   available.
+5. If it remains below target, label roughly 100–200 representative misses, train LoRA first
+   when data or compute is limited, and compare it with both the base model and any full
+   fine-tune on the identical frozen set.
+
+The sample count is a starting point, not a guarantee. Difficult or imbalanced domains may need
+more examples; learning curves are better evidence than a fixed number.
 
 ## Entity extraction metrics
 
@@ -57,17 +73,17 @@ def precision_recall_f1(counts: dict[str, int]) -> dict[str, float]:
     return {"precision": precision, "recall": recall, "f1": f1}
 ```
 
-Run it over the eval set:
+Run it over the test set:
 
 ```python
 from gliner2 import AutoExtractor
 from gliner2.training.data import TrainingDataset
 
 extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
-eval_data = TrainingDataset.load("eval.jsonl")
+test_data = TrainingDataset.load("test.jsonl")
 
 counts = {"tp": 0, "fp": 0, "fn": 0}
-for example in eval_data.examples:
+for example in test_data.examples:
     predicted = extractor.extract_entities(example.text, list(example.entities))
     accumulate_entity_counts(predicted["entities"], example.entities, counts)
 
@@ -122,11 +138,24 @@ fp = len(predicted_triples - gold_triples)
 fn = len(gold_triples - predicted_triples)
 ```
 
+## Structured and combined-schema metrics
+
+For structured extraction, compare each requested field independently and report exact-match
+precision/recall/F1 per field. Normalize only what the product contract permits (for example,
+case or whitespace); do not use fuzzy matching by default because it can hide incorrect values.
+For repeated records, match records by their declared anchor field before scoring the remaining
+fields.
+
+For a combined schema, report each task separately: entity metrics, classification metrics,
+relation triples, and structured fields. Do not collapse them into one blended score. The same
+rule applies to `JointIE`: report entity quality and relation-triple quality independently even
+though they were decoded together.
+
 ## Comparing zero-shot vs. fine-tuned
 
-Same eval set, same metric function, for both models — never compare a zero-shot run against
+Same test set, same metric function, for both models — never compare a zero-shot run against
 the fine-tuned model's own training-time validation numbers, and never let either model see
-the eval set before this comparison:
+the test set before this comparison:
 
 ```python
 zero_shot = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
@@ -134,7 +163,7 @@ fine_tuned = AutoExtractor.from_pretrained("./my_model/best")
 
 for name, model in [("zero-shot", zero_shot), ("fine-tuned", fine_tuned)]:
     counts = {"tp": 0, "fp": 0, "fn": 0}
-    for example in eval_data.examples:
+    for example in test_data.examples:
         predicted = model.extract_entities(example.text, list(example.entities))
         accumulate_entity_counts(predicted["entities"], example.entities, counts)
     print(name, precision_recall_f1(counts))
@@ -142,24 +171,36 @@ for name, model in [("zero-shot", zero_shot), ("fine-tuned", fine_tuned)]:
 
 ## Threshold sweep
 
-Pick the operating point empirically on the eval set, not by guessing — lower `threshold`
-trades precision for recall:
+Pick the operating point empirically on the validation set, not by guessing — lower `threshold`
+trades precision for recall. After selecting it, evaluate that fixed threshold once on the
+frozen test set:
 
 ```python
+validation_data = TrainingDataset.load("validation.jsonl")
+
 for t in [0.3, 0.5, 0.7, 0.9]:
     counts = {"tp": 0, "fp": 0, "fn": 0}
-    for example in eval_data.examples:
+    for example in validation_data.examples:
         predicted = extractor.extract_entities(example.text, list(example.entities), threshold=t)
         accumulate_entity_counts(predicted["entities"], example.entities, counts)
     print(t, precision_recall_f1(counts))
+
+selected_threshold = 0.7  # chosen from validation results
+counts = {"tp": 0, "fp": 0, "fn": 0}
+for example in test_data.examples:
+    predicted = extractor.extract_entities(
+        example.text, list(example.entities), threshold=selected_threshold
+    )
+    accumulate_entity_counts(predicted["entities"], example.entities, counts)
+print("final test", precision_recall_f1(counts))
 ```
 
 ## Common pitfalls
 
-- **A too-easy eval set.** If zero-shot already scores >95%, the set can't show a fine-tune's
+- **A too-easy test set.** If zero-shot already scores >95%, the set can't show a fine-tune's
   benefit — pull in the actual production misses that motivated fine-tuning.
-- **Touching the eval set mid-iteration.** Freeze it before tuning schema, thresholds, or
-  training data. If you must change it, re-run every model you've compared so far, not just the
+- **Touching the test set mid-iteration.** Tune on validation data and keep the test set frozen.
+  If you must change it, re-run every model you've compared so far, not just the
   one you're currently working on — this is the same "re-run the full battery" discipline
   `SKILL.md`'s router-tuning caveat describes.
 - **Mixing micro and macro without saying so.** Report which one a number is; they diverge a lot
@@ -169,11 +210,11 @@ for t in [0.3, 0.5, 0.7, 0.9]:
 
 ## Best practices
 
-1. Freeze the eval set before tuning anything (schema, threshold, checkpoint). It's the one
-   artifact you don't touch mid-iteration.
+1. Freeze the test set before tuning anything. Tune schemas, thresholds, and checkpoints on
+   validation data; the test set is the one artifact you don't touch mid-iteration.
 2. Report micro-averaged F1 as the headline number, but keep the per-label/per-type breakdown —
    an aggregate can hide one badly-underperforming label.
 3. Log metrics per schema/checkpoint version (a CSV or JSON line per run is enough) so a
    regression from a later change is visible, not just improvements.
-4. Compare zero-shot and fine-tuned on the identical eval set and code path — same extractor
+4. Compare zero-shot and fine-tuned on the identical test set and code path — same extractor
    call, same metric function, only the checkpoint differs.

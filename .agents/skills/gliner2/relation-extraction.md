@@ -103,3 +103,7 @@ See [combined-schemas.md](combined-schemas.md) for richer multi-task composition
 5. **Always check for empty lists**, not absence of key, when branching on whether a relation was
    found — the key is always present.
 6. Combine with entity extraction so relation arguments have known types for downstream use.
+7. **Pronouns referring to a known party (`"reports to me"`) don't resolve to a name and the
+   relation is silently dropped** — resolve known pronouns from structured metadata you already
+   have (e.g. regex-substitute `"me"` with the sender's name from an email header) before calling
+   `extract_relations`; push resolution upstream rather than expecting the model to do it.

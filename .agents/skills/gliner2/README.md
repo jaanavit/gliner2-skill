@@ -4,14 +4,15 @@ Drop-in skill for Claude Code, Cursor, Codex, and other agent environments that 
 `.agents/skills/` (or `.claude/skills/` on the same path via symlink). Gives your coding agent
 full context on GLiNER2 (`gliner2` PyPI package) and the original GLiNER (`gliner` PyPI package)
 — model/architecture selection, every extraction method (NER, classification, structured/JSON,
-relations, multi-task schemas), training/fine-tuning, and the cloud API.
+relations, multi-task schemas), training/fine-tuning, and Pioneer's hosted inference API.
 
 This page is for installing the skill somewhere that doesn't have it yet. The skill itself, read
 by the agent once installed, is [`SKILL.md`](SKILL.md).
 
 ## Installation
 
-### Manual copy (works today, any agent)
+<details>
+<summary>Manual copy (works today, any agent)</summary>
 
 This directory is self-contained — no dependency on the rest of the repo it currently lives in.
 Copy the whole `gliner2/` folder (`SKILL.md` + every `*.md` reference file + `route_usecase.py` +
@@ -26,7 +27,10 @@ cp -R /path/to/this/gliner2 /path/to/your-project/.agents/skills/gliner2
   `.agents/skills/` natively).
 - Codex: `.agents/skills/gliner2/` (scanned from cwd up to the repo root).
 
-### Copy to your agent
+</details>
+
+<details>
+<summary>Copy to your agent</summary>
 
 Paste this prompt into your coding agent:
 
@@ -42,7 +46,10 @@ Replace `<path-or-URL...>` with wherever this directory lives for you — a shar
 repo's path, or a public GitHub URL once one exists (see below). Use one installation method to
 avoid duplicate copies.
 
-### Publishing this publicly (not done yet)
+</details>
+
+<details>
+<summary>Publishing this publicly (not done yet)</summary>
 
 To get the same one-command install TypeSafe's skill has
 (`claude plugin marketplace add ...` / `npx skills add ...`), this directory would need to move
@@ -51,10 +58,15 @@ the Claude Code plugin marketplace both expect), get a marketplace manifest, and
 That's a separate decision — repo name/ownership/visibility — not something to do silently as
 part of writing the skill content itself.
 
-### Updates
+</details>
+
+<details>
+<summary>Updates</summary>
 
 For a manual copy, just re-copy the directory over the old one. There's no versioning yet — if
 you're editing your copy locally, diff before overwriting.
+
+</details>
 
 ## Example prompts
 
@@ -76,6 +88,13 @@ you're editing your copy locally, diff before overwriting.
   Using the GLiNER2 skill, set up structured JSON extraction for <schema> over my dataset at
   <path>.
   ```
+
+## Best practices for using this skill
+
+- Let `SKILL.md`'s routing table pick the reference file — don't guess or read everything.
+- Default to GLiNER2.5 / `AutoExtractor`; only follow a `gliner1-*.md` link for the specific
+  cases `SKILL.md`'s disambiguation table calls out.
+- Name the skill explicitly ("use the GLiNER2 skill") if your agent doesn't auto-invoke it.
 
 ## Good practice
 

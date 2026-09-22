@@ -4,6 +4,29 @@ Runtime knobs that change *how fast* or *on what hardware* a model runs, without
 extraction method or schema you use. None of these require re-downloading a checkpoint or
 retraining.
 
+## CPU / no-GPU deployments
+
+The knobs below are framed for GPU (`quantize`/`compile` examples use `map_location="cuda"`,
+FlashDeBERTa is NVIDIA-only). For CPU-only or edge deployment, the lever that actually matters is
+**checkpoint size**, not a runtime flag: use `fastino/gliner2.5-small-v1` (74M params,
+DeBERTa-v3-xsmall) instead of `-base-v1` (194M) or `-multi-v1` (287M) — see
+[SKILL.md](SKILL.md)'s model catalog.
+
+Measured on one machine (10-core Apple Silicon, CPU only, `batch_size=1`, 5-label entity
+extraction on short sentences — a directional anchor for capacity planning, not a universal
+benchmark; re-measure on your own hardware):
+
+| Checkpoint | Throughput | 50,000 docs, single-threaded |
+|---|---|---|
+| `gliner2.5-small-v1` | ~81 docs/sec | ~10 min |
+| `gliner2.5-base-v1` | ~33 docs/sec | ~25 min |
+
+Scale further by batching across processes/workers, not by reaching for `quantize`: verified
+`quantize=True` (`from_pretrained`'s boolean flag casts to fp16 by default, same as calling
+`model.quantize("fp16")`) makes CPU throughput **2.7x worse** (81 → 30 docs/sec on `small-v1`) —
+most CPUs have no native fp16 compute and emulate it, and `quantize()` only supports fp16/bf16
+casts, not true int8. It is a GPU-only lever; skip it entirely without a GPU.
+
 ## Quantization and `torch.compile`
 
 Both are opt-in at load time (or after loading) and need no extra dependencies:

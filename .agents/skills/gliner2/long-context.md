@@ -184,6 +184,15 @@ paragraphs/sentences that contain both arguments.
   names.
 - Request `include_spans=True` until every offset slices back to the expected substring.
 - Use label descriptions on long, repetitive documents to cut generic false positives.
+- Pair `::str` structure fields with a length-bounding `RegexValidator` on long/repetitive
+  documents — see [json-extraction.md](json-extraction.md)'s pitfall section, including the
+  verified caveat that this contains runaway spans but won't manufacture a short answer where
+  none exists.
+- On long documents with numbered sections, a bare cross-reference (`"Section 8.4"`) can satisfy
+  an entity description just by proximity. Verified: excluding the pattern with
+  `RegexValidator(r"^(Section\s+)?\d+(\.\d+)*\.?$", exclude=True)` on an `entities()` config dict
+  (not just `.structure().field()`) correctly dropped bare references while leaving real matches
+  intact.
 - For constrained labels, aggregate then decode once — never majority-vote per-chunk labels.
 - For graphs, use `JointIE.extract_long` and accept that edges are intra-chunk.
 - Tune `threshold`, `chunk_size`, `chunk_overlap` on a real domain sample, not just short

@@ -1,7 +1,7 @@
 # Regex Validators
 
-Filter extracted spans to match expected patterns, cutting false positives. **Local models only —
-not available via the cloud API** (`GLiNER2.from_api()`). Mirrors
+Filter extracted spans to match expected patterns, cutting false positives. **Local models only.**
+Mirrors
 [tutorial/5-validator.md](https://github.com/fastino-ai/GLiNER2/blob/main/tutorial/5-validator.md).
 
 ## Quick start
@@ -18,6 +18,12 @@ schema = (
         .field("email", dtype="str", validators=[email_validator])
 )
 ```
+
+Validators also work on `.entities(...)` config dicts, not just `.structure().field(...)`:
+`.entities({"label": {"description": "...", "validators": [validator]}})`. Verified: excluding
+bare section-number references (`RegexValidator(r"^(Section\s+)?\d+(\.\d+)*\.?$", exclude=True)`)
+on an entity label correctly dropped `"Section 8.4"` while a real baseline call without the
+validator kept it — see [long-context.md](long-context.md) for the long-document use case.
 
 ## Parameters
 

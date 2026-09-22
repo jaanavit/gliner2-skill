@@ -6,16 +6,15 @@ combined-schema inference request shape, batching, retries, and the OpenAI-compa
 
 ## Setup
 
+No Pioneer account yet? Sign up or log in at
+[agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) (Google, GitHub, magic link, or email),
+then get a key from Settings → API Keys.
+
 ```bash
 export PIONEER_API_KEY="pio_sk_..."
 ```
 
-```bash
-curl -X POST https://api.pioneer.ai/inference \
-  -H "X-API-Key: $PIONEER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model_id": "fastino/gliner2-base-v1", "text": "...", "schema": {"entities": [...]}}'
-```
+See **Request shape** below for a full worked call.
 
 ## Picking a base model
 

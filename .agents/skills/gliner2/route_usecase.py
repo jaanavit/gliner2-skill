@@ -51,7 +51,6 @@ USE_CASES: dict[str, str] = {
     "combined-schemas.md": "Extract two or more of entities, classification, structured records, or relations from the same text in a single pass, instead of calling the model once per task",
     "relation-extraction.md": "Extract relationship pairs between two entities in text, such as who works for which company, who is located in which place, who is married to whom, or who founded what",
     "regex-validators.md": "Filter or validate already-extracted spans against a regular expression, such as confirming a span looks like a valid email address, phone number, or URL",
-    "api-access.md": "Call GLiNER2 through a hosted cloud API endpoint instead of downloading and running a model locally",
     "span-attributes.md": "Attach a sub-label, like sentiment or severity, to each individual extracted entity span rather than classifying the document as a whole",
     "constrained-classification.md": "Enforce a hard logical rule between two classification tasks, such as one label implying another must also be present, or two labels being mutually exclusive",
     "joint-ie.md": "Extract entities and relations together as one consistent graph with typed endpoints, so entities and their relationships stay mutually consistent, such as each person having at most one employer",

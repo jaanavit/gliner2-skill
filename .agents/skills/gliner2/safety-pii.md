@@ -188,6 +188,29 @@ result = pii.extract_entities(
 #               'city': [{'text': 'Berlin', 'start': 54, 'end': 60}]}}
 ```
 
+**Redaction** is a substitution loop over `include_spans=True` output, not something the model
+returns directly — replace right-to-left so earlier offsets stay valid as the string shortens or
+grows:
+
+```python
+def redact(text: str, entities: dict) -> str:
+    spans = [(item["start"], item["end"], etype)
+             for etype, items in entities.items() for item in items]
+    spans.sort(key=lambda s: -s[0])  # right-to-left
+    counters = {}
+    for start, end, etype in spans:
+        counters[etype] = counters.get(etype, 0) + 1
+        text = text[:start] + f"[{etype.upper()}_{counters[etype]}]" + text[end:]
+    return text
+
+text = ("Hi this is Sarah Kim, my account email is sarah.kim88@gmail.com and my phone is "
+        "415-555-0128, can you look up order #4471?")
+result = pii.extract_entities(text, ["person", "email", "phone_number"], include_spans=True)
+redact(text, result["entities"])
+# "Hi this is [PERSON_1], my account email is [EMAIL_1] and my phone is [PHONE_NUMBER_1],
+#  can you look up order #4471?"  — verified round-trips cleanly with no offset drift.
+```
+
 Pass any subset of the 42 supported labels at inference time. Full label list: the
 [PII Hub card](https://huggingface.co/fastino/gliner2-privacy-filter-PII-multi).
 

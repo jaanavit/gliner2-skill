@@ -191,6 +191,32 @@ results = extractor.batch_extract_json(
 For the schema-builder form, `extractor.batch_extract(texts, schema)` also works — a single
 schema for every text, or a list of per-document schemas the same length as `texts`.
 
+## Pitfall: long or repetitive documents can balloon `::str` fields
+
+GLiNER2.5 boundary checkpoints have no maximum span width (entity-extraction.md's best practice
+#5) — on a long, repetitive document a `::str` field's description can end up satisfied by a
+multi-hundred-word span instead of a short value. Verified: on a padded 6,800-word transcript,
+an unbounded `resolution::str` field captured several full turns of dialogue instead of a short
+phrase. Pairing the field with a length-bounding [`RegexValidator`](regex-validators.md)
+(`r"^.{1,80}$"`) does contain the damage, but **only when a short candidate span exists at all**
+— for `order_id` it correctly fell through to the short, correct value once the long one was
+rejected; for `resolution` there was no shorter candidate underneath the long one at any cap up
+to 200 chars, so the validator just leaves the field `null` instead of blob-filled. Treat a
+validator-filtered `null` on a long/repetitive document as a real miss to fix with a tighter
+description or fine-tuning — not as "solved" just because the blob is gone.
+
+```python
+short_value = RegexValidator(r"^.{1,80}$")
+schema = (
+    extractor.create_schema()
+    .structure("complaint")
+        .field("order_id", dtype="str", validators=[short_value])
+        .field("resolution", dtype="str", validators=[short_value])
+)
+```
+
+See [long-context.md](long-context.md) for chunking `extract_long` over the full document.
+
 ## Best practices
 
 - `::str` for single values (IDs, names, amounts). `::list` (or omit) for multiple values

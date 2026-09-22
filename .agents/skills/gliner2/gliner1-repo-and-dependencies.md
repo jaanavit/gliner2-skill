@@ -80,7 +80,7 @@ expect drift over time, not just at this snapshot.
 
 | | `gliner` (v1) | `gliner2` |
 |---|---|---|
-| Base deps | `torch`, `transformers`, `huggingface_hub`, `numpy`, `packaging`, `safetensors`, `tqdm`, `sentencepiece` — **torch is mandatory** | `pydantic`, `requests`, `tqdm`, `urllib3` — **no torch**; the base install works with the cloud API alone |
+| Base deps | `torch`, `transformers`, `huggingface_hub`, `numpy`, `packaging`, `safetensors`, `tqdm`, `sentencepiece` — **torch is mandatory** | `pydantic`, `requests`, `tqdm`, `urllib3` — **no torch**; the base install is enough for training-data prep or calling Pioneer's hosted REST API |
 | Local inference | Always available (base install) | Needs the `[local]` extra: `numpy`, `peft`, `safetensors`, `torch>=2.1,<3`, `transformers>=4.38,<5` |
 | Training | `[training]` extra: `accelerate` | `[train]` extra: adds `peft`, `PyYAML`, plus the `[local]` set |
 | `transformers` floor | `>=4.51.3,<5.17.0` (pyproject) / `>=4.57.3` (requirements.txt) | `>=4.38,<5` (via `[local]`/`[train]`) |
@@ -96,9 +96,10 @@ moves its pins — and the two pull genuinely different secondary dependency tre
 and a `gliner2-env`) unless you've specifically verified one shared environment resolves cleanly
 for the extras you need from each. This matters more than it looks: `gliner`'s base install is
 already "heavy" (torch + transformers unconditionally), while `gliner2`'s is deliberately "light"
-(no torch until `[local]`) specifically so callers who only need the cloud API
-([api-access.md](api-access.md)) can skip the heavy stack entirely — installing both into one env
-by default erases that distinction for no benefit if you don't need both loaded at once.
+(no torch until `[local]`) specifically so callers who only need to build/validate training data
+or call Pioneer's hosted REST API ([pioneer-api.md](pioneer-api.md), plain HTTP, no SDK) can skip
+the heavy stack entirely — installing both into one env by default erases that distinction for no
+benefit if you don't need both loaded at once.
 
 ## Ecosystem (from GLiNER's own README)
 

@@ -1,6 +1,6 @@
 ---
 name: gliner2
-description: Build GLiNER2 (gliner2 PyPI package / fastino-ai/GLiNER2) schemas and pick the right extraction method for a use case — text classification, entity extraction, structured/JSON extraction, relation extraction, combined multi-task schemas, regex validators, span attributes, constrained classification, joint entity-relation extraction, long-context/chunked extraction, LoRA training, adapter switching, and the GLiNER2 cloud API (GLiNER2API/AutoExtractor). Also covers the original GLiNER (v1, `gliner` PyPI package / urchade/GLiNER) — single-task NER, architectures (UniEncoder/BiEncoder/Decoder/Relex/StreamingSpan), training, ONNX/OpenVINO export, and Ray Serve deployment. Use whenever the user mentions GLiNER2, gliner2, AutoExtractor, fastino/gliner2, GLiNER2.5, GLiNER, gliner, urchade, predict_entities, schema-based NER/classification/extraction, or asks which GLiNER method/package fits their use case.
+description: Build GLiNER2 (gliner2 PyPI package / fastino-ai/GLiNER2) schemas and pick the right extraction method for a use case — text classification, entity extraction, structured/JSON extraction, relation extraction, combined multi-task schemas, regex validators, span attributes, constrained classification, joint entity-relation extraction, long-context/chunked extraction, LoRA training, adapter switching, and Pioneer's hosted inference API. Also covers the original GLiNER (v1, `gliner` PyPI package / urchade/GLiNER) — single-task NER, architectures (UniEncoder/BiEncoder/Decoder/Relex/StreamingSpan), training, ONNX/OpenVINO export, and Ray Serve deployment. Use whenever the user mentions GLiNER2, gliner2, AutoExtractor, fastino/gliner2, GLiNER2.5, GLiNER, gliner, urchade, predict_entities, schema-based NER/classification/extraction, or asks which GLiNER method/package fits their use case.
 ---
 
 # GLiNER2
@@ -27,7 +27,7 @@ the single most common way agents burn time on this skill.
    rather than debugging an existing site-packages install.
 3. **Install the extra(s) your task needs — the base package alone is not enough for most work:**
    ```bash
-   pip install gliner2                                   # Schema, RegexValidator, GLiNER2API -- no torch required
+   pip install gliner2                                   # Schema, RegexValidator, InputExample/TrainingDataset -- no torch required
    pip install "gliner2[local]" protobuf sentencepiece    # + local model inference (AutoExtractor, LoRA)
    pip install "gliner2[train]"                           # + training (ExtractorTrainer, TrainingConfig)
    ```
@@ -115,8 +115,7 @@ only the file(s) the task needs.
 | Do 2+ of the above in one pass over the same text | `create_schema()` chaining | [combined-schemas.md](combined-schemas.md) |
 | Extract `(head, tail)` pairs like works_for/located_in, no typed endpoints needed | `extract_relations()` / `.relations()` | [relation-extraction.md](relation-extraction.md) |
 | Filter/validate extracted spans with a regex (email, phone, URL) | `RegexValidator` (local models only) | [regex-validators.md](regex-validators.md) |
-| Call GLiNER2 without loading a model locally | `GLiNER2.from_api()` (`GLiNER2API`) | [api-access.md](api-access.md) |
-| Call Pioneer's own hosted `api.pioneer.ai/inference` REST endpoint directly (model selection, fine-tuned job IDs, raw HTTP) | `POST /inference` | [pioneer-api.md](pioneer-api.md) *(Pioneer-specific, not the generic public API)* |
+| No GPU, or want hosted inference/training — sign up at [agent.pioneer.ai/auth](https://agent.pioneer.ai/auth), then call Pioneer's `api.pioneer.ai/inference` REST endpoint (model selection, fine-tuned job IDs, raw HTTP) | `POST /inference` | [pioneer-api.md](pioneer-api.md) |
 | Attach a label (e.g. sentiment) to each extracted entity span, not the whole doc | `entity_attributes()` + `AttributeGroup` (GLiNER2.5 only) | [span-attributes.md](span-attributes.md) |
 | Enforce hard rules between classification tasks (e.g. intent=delete ⇒ effects includes delete) | `Classifier` + constraint DSL (GLiNER2.5 only) | [constrained-classification.md](constrained-classification.md) |
 | Extract entities AND relations as one consistent typed graph (unique employer, no self-loops, etc.) | `JointIE` (GLiNER2.5 + `enable_relations=True`) | [joint-ie.md](joint-ie.md) |
@@ -214,16 +213,17 @@ relations, and classifications — safe to iterate without existence checks.
 `batch_classify_text`, ...) take `batch_size=` and return one result per input, same shape as the
 singular call.
 
-Don't want to load a model locally at all? [api-access.md](api-access.md) (`GLiNER2.from_api()`)
-and [pioneer-api.md](pioneer-api.md) (raw Pioneer HTTP, plus hosted training) give the same
-method surface over a cloud call instead.
+Don't want to load a model locally at all, or don't have a GPU? Sign up at
+[agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) and use
+[pioneer-api.md](pioneer-api.md) — Pioneer's hosted `api.pioneer.ai/inference` REST endpoint
+gives the same method surface (plus hosted training) over a plain HTTP call instead.
 
 ## Appendix: GLiNER vs GLiNER2 — which package?
 
 This skill covers **two different PyPI packages** from the same lineage. Everything in §§1–6
 above is **GLiNER2** (`gliner2`) — it's a superset: schema-driven multi-task extraction (NER +
-classification + JSON + relations + attributes in one pass), a cloud API, and the actively
-developed line. Reach for the original **GLiNER (v1)** (`gliner`, `gliner1-*.md` files in this
+classification + JSON + relations + attributes in one pass) and the actively developed line.
+Reach for the original **GLiNER (v1)** (`gliner`, `gliner1-*.md` files in this
 same directory) only when you specifically need something GLiNER2 doesn't have:
 
 | Need | Package | Start at |

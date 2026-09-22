@@ -126,6 +126,12 @@ only the file(s) the task needs.
 Zero-shot accuracy insufficient for one of these? That's not a routing problem — see
 [§5 Fine-tune locally](#5-fine-tune-locally) below rather than switching methods.
 
+**No default for a vague, schema-less request.** For a prompt like "extract stuff from this"
+with no entity/label list and no clear task type, this table gives no fallback: there's no
+default label set and no stated policy on asking a clarifying question vs. guessing a broad
+schema. Ask what to extract (a short label list, or a description of the target fields) before
+picking a row above, rather than guessing — a guessed broad schema is unreviewable output.
+
 ### Programmatic routing
 
 For a non-agent caller (CLI, docs bot, pre-flight check), [`route_usecase.py`](route_usecase.py)

@@ -97,8 +97,9 @@ results = extractor.extract_json(
 The `extract_json()`/`::`-spec form above already pairs fields correctly for most documents. When
 building through the schema builder on a **boundary (GLiNER2.5)** checkpoint trained with
 `enable_records=True` (all three `fastino/gliner2.5-*-v1` checkpoints), you can be explicit about
-which field anchors each instance — required when two instances could otherwise be ambiguous
-about which values belong together:
+which field anchors each instance — intended for cases where two instances could otherwise be
+ambiguous about which values belong together, but not a guaranteed fix; see the caveat below on
+`anchor=` sometimes regressing versus the plain call on the exact case it targets:
 
 ```python
 schema = (
@@ -127,6 +128,14 @@ survives normal thresholding — this is a pairing error, not low-confidence noi
 `threshold` will not reliably catch it. Sanity-check anchor-paired fields against the source text
 directly (not just checking confidence) whenever an instance might legitimately be missing a
 field.
+
+**`anchor=` is not a guaranteed fix for mis-pairing — it can make a field strictly worse than the
+plain call.** On a two-listing real-estate extraction where the plain `extract_json()` call
+already paired every field correctly, switching to `.structure(mode="natural", anchor="price")`
+returned `null` for `beds`/`baths` on **both** listings instead of the correct values the plain
+call already had. Anchor mode is worth trying when the plain call demonstrably mis-pairs fields
+on your input, but always compare its output against the plain call's on the same input rather
+than switching to it by default — it is not a strict improvement.
 
 ## Schema builder — only for multi-task scenarios
 

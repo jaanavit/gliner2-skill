@@ -150,6 +150,15 @@ result = model.extract("No fever, but persistent cough. Prescribed oral Amoxicil
 # medication "Amoxicillin" -> dosage_form: oral
 ```
 
+**Negation attribute scoring gets real cases wrong — do not treat it as reliable enough for
+unreviewed safety/clinical judgments.** On a multi-symptom clinical note with explicit negation
+phrasing ("No fever noted on exam"), the `negation` attribute mislabeled that symptom `present`
+instead of `negated`. Entity typing on clinical abbreviations can also misfire — "Pt" (a common
+abbreviation for "patient") was extracted as a `medication` in the same pass. Treat this whole
+pattern as a candidate generator that needs human review on anything safety- or
+compliance-relevant, not a final negation/typing judgment; measure precision/recall on your own
+note style (see [evaluation.md](evaluation.md)) before trusting it unreviewed.
+
 ## Best practices
 
 - Call `entities()` before `entity_attributes()`.

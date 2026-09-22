@@ -107,6 +107,17 @@ result.feasible              # True
 Without the constraint decoder, independent argmax could have produced the illegal combination
 `intent=delete, effects=["read_only"]`.
 
+**The exact decoder can satisfy a constraint by changing the antecedent label instead of the
+consequent.** Given `C.implies(("rule_violation", "harassment"), ("flags", "needs_review"))`, if
+independent decoding would pick `rule_violation="harassment"` (highest probability) with
+`flags=()` (nothing clears threshold), the exact decoder can instead return
+`rule_violation="hate_speech"` — a much lower-probability label — leaving `flags` still empty,
+rather than adding `needs_review` to `flags` and keeping `harassment`. Both repairs make the
+assignment `feasible=True` with no violations; the solver has no preference for repairing the
+consequent over the antecedent. If some labels must never be "escaped" this way, keep them out
+of implication antecedents, or add a second constraint that makes swapping the antecedent
+infeasible too (e.g. bounding how far the solution may diverge from the top independent label).
+
 ## Use cases
 
 - **Agent guardrails.** [`safety-pii.md`](safety-pii.md)'s GLiGuard checkpoint scores

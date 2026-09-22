@@ -16,13 +16,14 @@ APIs below once a document (a full contract, a multi-hour transcript, a scanned 
 through OCR) exceeds that native window, not by default for anything more than a sentence.
 
 **Fitting in the window is necessary but not sufficient for a combined/repeated-structure
-schema.** A ~3,400-word contract with 8 repeated coverage sections fit in one window but a single
-`extract()` call combining `.entities(...)` with a multi-field `.structure(...)` returned zero
-entities and merged all 8 sections into one record — no error, just silently wrong output. Plain
-entity extraction alone over the same full document worked fine. If the document has multiple
-repeated top-level units, pre-segment on the obvious markers (section headers, etc.) in plain
-code and extract per segment, even when comfortably under `max_len`. See
-[combined-schemas.md](combined-schemas.md)'s best practices for the same caveat.
+schema.** A single `extract()` call combining `.entities(...)` with a multi-field
+`.structure(...)` over a long document with multiple repeated top-level sections (e.g. contract
+clauses) can return zero entities and merge every section into one record — no error, just
+silently wrong output — even though the document fits in one window and plain entity extraction
+alone over the same document works fine. If the document has multiple repeated top-level units,
+pre-segment on the obvious markers (section headers, etc.) in plain code and extract per segment,
+even when comfortably under `max_len`. See [combined-schemas.md](combined-schemas.md)'s best
+practices for the same caveat.
 
 ## Why / how
 
@@ -185,14 +186,12 @@ paragraphs/sentences that contain both arguments.
 - Request `include_spans=True` until every offset slices back to the expected substring.
 - Use label descriptions on long, repetitive documents to cut generic false positives.
 - Pair `::str` structure fields with a length-bounding `RegexValidator` on long/repetitive
-  documents — see [json-extraction.md](json-extraction.md)'s pitfall section, including the
-  verified caveat that this contains runaway spans but won't manufacture a short answer where
-  none exists.
+  documents — see [json-extraction.md](json-extraction.md)'s pitfall section: this contains
+  runaway spans but won't manufacture a short answer where none exists.
 - On long documents with numbered sections, a bare cross-reference (`"Section 8.4"`) can satisfy
-  an entity description just by proximity. Verified: excluding the pattern with
+  an entity description just by proximity. Exclude the pattern with
   `RegexValidator(r"^(Section\s+)?\d+(\.\d+)*\.?$", exclude=True)` on an `entities()` config dict
-  (not just `.structure().field()`) correctly dropped bare references while leaving real matches
-  intact.
+  (not just `.structure().field()`) to drop bare references while leaving real matches intact.
 - For constrained labels, aggregate then decode once — never majority-vote per-chunk labels.
 - For graphs, use `JointIE.extract_long` and accept that edges are intra-chunk.
 - Tune `threshold`, `chunk_size`, `chunk_overlap` on a real domain sample, not just short

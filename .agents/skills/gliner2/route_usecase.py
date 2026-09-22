@@ -12,21 +12,16 @@ Usage:
     python route_usecase.py "classify support tickets and also extract order IDs" --top 3
 
 Tuning notes (read before editing USE_CASES):
-    Verified end-to-end against fastino/gliner2.5-base-v1 on a 19-task battery (one clear-cut
-    task per reference file): 16/19 correct as the top match, 17/19 within the top 3 at the
-    default --threshold 0.25. Label description quality drives this directly -- a sparse
-    description ("long-context.md": "Process a document longer than the model's context
-    window...") scored the right label at confidence 0.004 on an on-the-nose task; rewriting it
-    with concrete trigger phrases ("...such as a 50-page PDF or a multi-hour transcript")
-    brought it to 0.73-0.97.
+    Label description quality drives routing accuracy directly -- a sparse description (e.g.
+    "long-context.md": "Process a document longer than the model's context window...") can score
+    the right label near-zero confidence on an on-the-nose task, while rewriting it with concrete
+    trigger phrases (e.g. "...such as a 50-page PDF or a multi-hour transcript") can raise it well
+    above threshold.
 
     classify_text-style multi-label decoding scores every label in one joint pass, not
-    independently -- tightening one label's description to fix a miss measurably shifts *other*
-    labels' scores (fixing a Chinese-word-segmentation phrasing that scored
-    performance-tuning.md at 0.08 pushed it to 0.81, but the same edit dropped an unrelated
-    regex-validators.md case from 0.4 to below threshold). Retuning descriptions is
-    whack-a-mole, not monotonic improvement -- after any edit, re-run the full battery, not just
-    the one case you're fixing.
+    independently -- tightening one label's description to fix a miss can measurably shift
+    *other* labels' scores up or down. Retuning descriptions is whack-a-mole, not monotonic
+    improvement -- after any edit, re-run the full battery, not just the one case you're fixing.
 """
 
 from __future__ import annotations

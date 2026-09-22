@@ -106,12 +106,11 @@ underlying provider job once dispatched (e.g. `modal:fc-...`). On success, `trai
 is populated and `is_deployable` flips `true`. **The job's `id` is the UUID to pass as `model_id`
 at `/inference` below** — no separate deploy step needed to call it.
 
-As of this writing, training jobs against `fastino/gliner2-base-v1` reliably reach a terminal
-`"errored"` state within seconds regardless of `task_type`/`training_type`, with
-`error_message: "Modal training failed"` and no further detail in `/logs`. Dataset upload and job
-creation both work mechanically (confirmed end-to-end); the actual training run failing looks
-like a current provider-side issue rather than a request-format problem — verify job status
-before assuming a training run will complete.
+Training jobs against `fastino/gliner2-base-v1` can reach a terminal `"errored"` state within
+seconds regardless of `task_type`/`training_type`, with `error_message: "Modal training failed"`
+and no further detail in `/logs`. Dataset upload and job creation work mechanically end-to-end;
+a training run failing this way is a provider-side issue rather than a request-format problem —
+verify job status before assuming a training run will complete.
 
 ## Request shape
 

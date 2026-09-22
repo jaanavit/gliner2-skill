@@ -116,12 +116,12 @@ results = extractor.batch_extract(texts, [schema_a, schema_b, ...], batch_size=8
   [long-context.md](long-context.md); it accepts any schema built here unchanged.
 - **Combining a heavy multi-field `.structure(...)` with `.entities(...)` over a long document
   (thousands of words, even if under `max_len`) can silently starve or corrupt one of the tasks**
-  — observed failure mode: entities came back as empty lists (no error) while a repeated
-  structure that should have produced one record per section instead collapsed every section's
-  fields into a single merged record. This is worse than it sounds because nothing errors or
-  warns; you only notice by inspecting output counts. If a long document has many repeated
-  top-level sections (contract clauses, chat turns, ticket entries), don't rely on the model to
-  find and anchor each instance in one combined pass — pre-segment the document on the obvious
-  structural markers (headers, delimiters) in plain code first, then run one `extract()`/
-  `extract_json()` call per segment. Reserve one-call combined schemas for short-to-medium text
-  or for documents whose repeated units aren't already unambiguous in plain Python.
+  — failure mode: entities come back as empty lists (no error) while a repeated structure that
+  should produce one record per section instead collapses every section's fields into a single
+  merged record. Nothing errors or warns; the only symptom is output counts lower than expected.
+  If a long document has many repeated top-level sections (contract clauses, chat turns, ticket
+  entries), don't rely on the model to find and anchor each instance in one combined pass —
+  pre-segment the document on the obvious structural markers (headers, delimiters) in plain code
+  first, then run one `extract()`/`extract_json()` call per segment. Reserve one-call combined
+  schemas for short-to-medium text or for documents whose repeated units aren't already
+  unambiguous in plain Python.

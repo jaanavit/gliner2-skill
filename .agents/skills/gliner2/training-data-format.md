@@ -139,13 +139,13 @@ dataset.validate_relation_consistency()  # per-relation-type field consistency
 dataset.print_stats()
 ```
 
-**`validate()` takes no `strict` argument — passing `strict=True` raises `TypeError`.** Confirmed
-against installed `gliner2==2.0.0`: the signature is `validate(self, raise_on_error=True)` only.
-The substring/text-exists check this file previously called "strict validation" is not a separate
-opt-in mode — `validate()` always checks that entity mentions and relation values exist in the
-input text (case-insensitive substring match) as part of its one pass. `raise_on_error=False`
-returns a report dict (`{'valid', 'invalid', 'total', 'invalid_indices', 'errors'}`) instead of
-raising, which is what you want during interactive dataset cleanup.
+**`validate()` takes no `strict` argument — passing `strict=True` raises `TypeError`.** As of
+`gliner2==2.0.0`, the signature is `validate(self, raise_on_error=True)` only. The substring/
+text-exists check is not a separate opt-in mode — `validate()` always checks that entity mentions
+and relation values exist in the input text (case-insensitive substring match) as part of its one
+pass. `raise_on_error=False` returns a report dict (`{'valid', 'invalid', 'total',
+'invalid_indices', 'errors'}`) instead of raising, which is what you want during interactive
+dataset cleanup.
 
 ## Tips
 
@@ -153,4 +153,4 @@ raising, which is what you want during interactive dataset cleanup.
 2. Provide descriptions wherever available — same accuracy lever as at inference time.
 3. Include multiple `json_structures` instances to teach multi-record extraction.
 4. Mix task types per example so the model learns multi-task composition.
-5. Validate with `strict=True` before training, not after.
+5. Validate with `dataset.validate(raise_on_error=True)` before training, not after.

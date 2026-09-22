@@ -20,10 +20,10 @@ schema = (
 ```
 
 Validators also work on `.entities(...)` config dicts, not just `.structure().field(...)`:
-`.entities({"label": {"description": "...", "validators": [validator]}})`. Verified: excluding
-bare section-number references (`RegexValidator(r"^(Section\s+)?\d+(\.\d+)*\.?$", exclude=True)`)
-on an entity label correctly dropped `"Section 8.4"` while a real baseline call without the
-validator kept it — see [long-context.md](long-context.md) for the long-document use case.
+`.entities({"label": {"description": "...", "validators": [validator]}})` — e.g. excluding bare
+section-number references (`RegexValidator(r"^(Section\s+)?\d+(\.\d+)*\.?$", exclude=True)`) on
+an entity label drops `"Section 8.4"` that would otherwise be kept — see
+[long-context.md](long-context.md) for the long-document use case.
 
 ## Parameters
 

@@ -77,7 +77,7 @@ checkpoints — use `AutoExtractor` unless you specifically know you want the le
 
 The three checkpoints ([Hub collection](https://huggingface.co/collections/fastino/gliner25-models))
 share one API, `enable_relations=True` + `enable_records=True` (every routing-table capability
-below works on all three), and a confirmed `max_len=4096` window — differing only in speed/size.
+below works on all three), and a `max_len=4096` window — differing only in speed/size.
 
 | Checkpoint | Params | Encoder | Language | Use case |
 |---|---|---|---|---|

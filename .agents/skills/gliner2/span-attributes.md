@@ -168,9 +168,6 @@ result = model.extract("No fever, but persistent cough. Prescribed oral Amoxicil
 - Verify offsets with `include_spans=True` until confirmed correct.
 - Never reuse reserved names (`text`, `start`, `end`, `confidence`) as a group name.
 - For whole-document sentiment, use classification instead of (or alongside) span attributes.
-- **Worked examples in this file (and others) show one illustrative run, not a reproducible
-  contract.** Re-running the exact sentiment example above on a live checkpoint returned only
-  one of the two documented entities, at different confidence values. Exact spans/confidences
-  are checkpoint-version- and run-dependent zero-shot output — verify shape (which keys appear,
-  under what nesting) against these examples, but don't treat the specific entities/numbers as a
-  regression target.
+- Exact spans/confidences in worked examples are checkpoint-version- and run-dependent zero-shot
+  output — use them to confirm output shape (which keys appear, under what nesting), not as a
+  regression target for the specific entities or numbers.

@@ -63,8 +63,8 @@ results = extractor.extract_json(
 **Choice fields do not vary per-instance inside a repeated structure.** A `[choice]`/`choices=`
 field nested in a structure that matches multiple times in one document (e.g. `sentiment` on a
 `dish` structure matched once per dish in a review) is scored **once at the document level** and
-copied into every matched instance — confirmed by two dishes with opposite sentiment in the same
-review coming back with byte-identical labels *and* identical confidence floats. This holds for
+copied into every matched instance — e.g. two dishes with opposite sentiment in the same review
+can come back with byte-identical labels *and* identical confidence floats. This holds for
 both the `extract_json()` `::[choice]` shorthand above and the schema-builder `.field(...,
 choices=[...])` form in the next section — same underlying bug, identical output. If you need a
 categorical label that actually varies per matched instance (sentiment per product, status per
@@ -121,12 +121,12 @@ the default list-per-field behavior. Legacy span checkpoints don't have `enable_
 don't support this builder form — use the plain `extract_json()`/`::`-spec form on those instead.
 
 **A record instance with no real match for a field can silently inherit a nearby wrong value
-instead of returning null.** E.g. an item mentioned but never actually purchased/ordered ended up
-with another instance's price copied in, at a plausible-looking confidence (0.6–0.8) that
-survived normal thresholding — this is a pairing error, not low-confidence noise, so raising
+instead of returning null.** E.g. an item mentioned but never actually purchased/ordered can end
+up with another instance's price copied in, at a plausible-looking confidence (0.6–0.8) that
+survives normal thresholding — this is a pairing error, not low-confidence noise, so raising
 `threshold` will not reliably catch it. Sanity-check anchor-paired fields against the source text
-directly (not just spot-checking confidence) whenever an instance might legitimately be missing
-a field.
+directly (not just checking confidence) whenever an instance might legitimately be missing a
+field.
 
 ## Schema builder — only for multi-task scenarios
 
@@ -195,15 +195,13 @@ schema for every text, or a list of per-document schemas the same length as `tex
 
 GLiNER2.5 boundary checkpoints have no maximum span width (entity-extraction.md's best practice
 #5) — on a long, repetitive document a `::str` field's description can end up satisfied by a
-multi-hundred-word span instead of a short value. Verified: on a padded 6,800-word transcript,
-an unbounded `resolution::str` field captured several full turns of dialogue instead of a short
-phrase. Pairing the field with a length-bounding [`RegexValidator`](regex-validators.md)
-(`r"^.{1,80}$"`) does contain the damage, but **only when a short candidate span exists at all**
-— for `order_id` it correctly fell through to the short, correct value once the long one was
-rejected; for `resolution` there was no shorter candidate underneath the long one at any cap up
-to 200 chars, so the validator just leaves the field `null` instead of blob-filled. Treat a
-validator-filtered `null` on a long/repetitive document as a real miss to fix with a tighter
-description or fine-tuning — not as "solved" just because the blob is gone.
+multi-hundred-word span instead of a short value, e.g. an unbounded `resolution::str` field
+capturing several full turns of dialogue instead of a short phrase. Pairing the field with a
+length-bounding [`RegexValidator`](regex-validators.md) (`r"^.{1,80}$"`) contains the damage
+**only when a shorter valid candidate span exists at all** — if no candidate under the length cap
+exists, the validator leaves the field `null` instead of blob-filled. Treat a validator-filtered
+`null` on a long/repetitive document as a real miss to fix with a tighter description or
+fine-tuning — not as "solved" just because the blob is gone.
 
 ```python
 short_value = RegexValidator(r"^.{1,80}$")

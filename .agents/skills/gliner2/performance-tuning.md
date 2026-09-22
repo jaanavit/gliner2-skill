@@ -12,16 +12,16 @@ FlashDeBERTa is NVIDIA-only). For CPU-only or edge deployment, the lever that ac
 DeBERTa-v3-xsmall) instead of `-base-v1` (194M) or `-multi-v1` (287M) — see
 [SKILL.md](SKILL.md)'s model catalog.
 
-Measured on one machine (10-core Apple Silicon, CPU only, `batch_size=1`, 5-label entity
-extraction on short sentences — a directional anchor for capacity planning, not a universal
-benchmark; re-measure on your own hardware):
+Single-machine throughput reference (10-core Apple Silicon, CPU only, `batch_size=1`, 5-label
+entity extraction on short sentences) — a directional anchor for capacity planning, not a
+universal benchmark; re-measure on your own hardware:
 
 | Checkpoint | Throughput | 50,000 docs, single-threaded |
 |---|---|---|
 | `gliner2.5-small-v1` | ~81 docs/sec | ~10 min |
 | `gliner2.5-base-v1` | ~33 docs/sec | ~25 min |
 
-Scale further by batching across processes/workers, not by reaching for `quantize`: verified
+Scale further by batching across processes/workers, not by reaching for `quantize`:
 `quantize=True` (`from_pretrained`'s boolean flag casts to fp16 by default, same as calling
 `model.quantize("fp16")`) makes CPU throughput **2.7x worse** (81 → 30 docs/sec on `small-v1`) —
 most CPUs have no native fp16 compute and emulate it, and `quantize()` only supports fp16/bf16
@@ -60,16 +60,15 @@ The default `"whitespace"` splitter is what public checkpoints were trained with
 a pretrained model can hurt quality unless the model was itself trained with the new splitter.
 
 Use the character-level splitter for languages without whitespace-delimited words (e.g. Chinese,
-Japanese) — **necessary, but not sufficient, for Japanese quality.** Verified empirically on
-`gliner2.5-multi-v1`: with the default whitespace splitter, a Japanese sentence with a person and
-an organization came back with **both entirely missed** — one garbage 18-character span
-mislabeled as a location instead. Switching to `word_splitter="char"` recovered the person
-(0.99 confidence) and the location (0.99 confidence), but the organization was still weak and
-duplicated into the location bucket too (`organization: 0.51` vs. an incorrect `location: 0.85`
-hit on the same span) — real residual cross-label ambiguity the splitter doesn't fix. Add
-descriptions to disambiguate Japanese labels (see the "descriptions beat bare label lists" rule
-in [SKILL.md](SKILL.md)) rather than assuming the splitter alone gets you English/Spanish-level
-quality:
+Japanese) — **necessary, but not sufficient, for Japanese quality.** On `gliner2.5-multi-v1`,
+with the default whitespace splitter, entities in a Japanese sentence can come back **entirely
+missed**, with a garbage span mislabeled under an unrelated type instead. Switching to
+`word_splitter="char"` recovers most entities at high confidence, but a weaker entity type can
+still duplicate into another label's bucket at high confidence too (e.g. a correct
+`organization: 0.51` alongside an incorrect `location: 0.85` hit on the same span) — residual
+cross-label ambiguity the splitter alone doesn't fix. Add descriptions to disambiguate Japanese
+labels (see the "descriptions beat bare label lists" rule in [SKILL.md](SKILL.md)) rather than
+assuming the splitter alone gets you English/Spanish-level quality:
 
 ```python
 model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1", word_splitter="char")

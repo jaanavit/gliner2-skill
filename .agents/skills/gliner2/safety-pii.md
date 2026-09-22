@@ -88,9 +88,9 @@ result = guard.classify_text(
 )
 # {'prompt_safety': 'unsafe', 'prompt_toxicity': ['non_violent_crime'],
 #  'jailbreak_detection': ['hypothetical_bypass']}
-# Verified against fastino/gliguard-LLMGuardrails-300M — exact labels are threshold- and
-# checkpoint-version-sensitive; the model card's own example returns different labels for the
-# same prompt. Print the real output for your checkpoint rather than trusting either example.
+# Exact labels are threshold- and checkpoint-version-sensitive; the model card's own example
+# returns different labels for the same prompt. Print the real output for your checkpoint
+# rather than trusting either example.
 ```
 
 ### Response moderation
@@ -110,7 +110,7 @@ result = guard.classify_text(
     threshold=0.5,
 )
 # {'response_safety': 'unsafe', 'response_toxicity': ['non_violent_crime'], 'response_refusal': 'refusal'}
-# Verified against the live checkpoint — see the caveat above; exact labels vary by version.
+# Exact labels vary by checkpoint version — see the caveat above.
 ```
 
 ### Batch moderation
@@ -208,7 +208,7 @@ text = ("Hi this is Sarah Kim, my account email is sarah.kim88@gmail.com and my 
 result = pii.extract_entities(text, ["person", "email", "phone_number"], include_spans=True)
 redact(text, result["entities"])
 # "Hi this is [PERSON_1], my account email is [EMAIL_1] and my phone is [PHONE_NUMBER_1],
-#  can you look up order #4471?"  — verified round-trips cleanly with no offset drift.
+#  can you look up order #4471?"  — right-to-left substitution round-trips with no offset drift.
 ```
 
 Pass any subset of the 42 supported labels at inference time. Full label list: the

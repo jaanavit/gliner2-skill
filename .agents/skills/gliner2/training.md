@@ -44,7 +44,7 @@ train_examples = [
 ]
 
 dataset = TrainingDataset(train_examples)
-dataset.validate(strict=True, raise_on_error=True)
+dataset.validate(raise_on_error=True)
 dataset.print_stats()
 
 train_data, val_data, _ = dataset.split(train_ratio=0.8, val_ratio=0.2, test_ratio=0.0, shuffle=True, seed=42)

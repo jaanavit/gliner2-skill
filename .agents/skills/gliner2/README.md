@@ -103,8 +103,8 @@ you're editing your copy locally, diff before overwriting.
 2. When zero-shot plateaus, the fix is almost always fine-tuning on your own labeled misses
    (`training.md`) or a LoRA adapter (`lora-adapters.md`) — not more wordsmithing on label
    descriptions.
-3. Validate training data (`dataset.validate(strict=True, raise_on_error=True)`) before spending
-   compute on a training run — most "fine-tune isn't working" reports are a data problem.
+3. Validate training data (`dataset.validate(raise_on_error=True)`) before spending compute on a
+   training run — most "fine-tune isn't working" reports are a data problem.
 4. Keep a held-out test set and compare fine-tuned vs. zero-shot on it before trusting the
    fine-tune — don't eyeball a handful of examples.
 

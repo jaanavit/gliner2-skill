@@ -217,8 +217,8 @@ graph grows across many extraction calls, not just within one document.
   constraint DSL (`unique_head`, `acyclic`, `no_self_loops`, etc.) only constrains a single
   relation type against itself. Two semantically exclusive relation types (e.g. `acquires` vs.
   `invests_in` — a company is either bought outright or given capital, not both) can both fire on
-  the same head/tail pair at high confidence, even with tuned descriptions and thresholds — this
-  was reproduced on real M&A text ("invested $25M in the Series B round" fired both `acquires`
-  0.98 and `invests_in` 0.99 on the same pair). There's no built-in fix yet; workaround is a
-  post-hoc filter that keeps only the highest-confidence relation type per `(head, tail)` pair
-  when two or more of your declared types are meant to be mutually exclusive.
+  the same head/tail pair at high confidence, even with tuned descriptions and thresholds — e.g.
+  a sentence like "invested $25M in the Series B round" can fire both `acquires` (0.98) and
+  `invests_in` (0.99) on the same pair. There's no built-in fix yet; workaround is a post-hoc
+  filter that keeps only the highest-confidence relation type per `(head, tail)` pair when two or
+  more of your declared types are meant to be mutually exclusive.

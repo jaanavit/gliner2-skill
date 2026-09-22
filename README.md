@@ -20,7 +20,8 @@ Use `-a claude-code` or `-a codex` for other agents, `-g` to install globally in
 per-project, or `--list` to preview the skill without installing. See
 [skills.sh](https://www.npmjs.com/package/skills) for the full CLI.
 
-### Manual install (no npx)
+<details>
+<summary>Manual install (no npx)</summary>
 
 ```bash
 git clone https://github.com/jaanavit/gliner2-skill.git /tmp/gliner2-skill
@@ -31,6 +32,8 @@ rm -rf /tmp/gliner2-skill
 
 Claude Code reads `.claude/skills/` instead — use that path, or symlink:
 `ln -s .agents/skills/gliner2 .claude/skills/gliner2`.
+
+</details>
 
 ## Use
 

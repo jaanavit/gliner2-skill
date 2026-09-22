@@ -15,8 +15,8 @@ Full fine-tuning:  legal 450MB + medical 450MB + financial 450MB = 1.35 GB
 LoRA adapters:     base 450MB + legal 5MB + medical 5MB + financial 5MB = 465 MB (~65% less)
 ```
 
-Also: ~2–3x faster training (only ~0.1–5% of parameters are trainable), lower GPU memory, and
-checkpoints ship pre-merged so they're ready for inference with no extra step.
+Also: ~2–3x faster training (only ~0.1–5% of parameters are trainable) and lower GPU memory.
+Loading a saved checkpoint back depends on `save_adapter_only` — see below.
 
 ## Basic LoRA training
 
@@ -40,8 +40,26 @@ config = TrainingConfig(
 trainer = ExtractorTrainer(model, config)
 trainer.train(train_data="train.jsonl", eval_data="val.jsonl")
 
-best_model = AutoExtractor.from_pretrained("./output_lora/best")   # checkpoints contain merged weights
+# save_adapter_only=True above -- the checkpoint is adapter-only, not merged.
+# Load the base model first, then attach the adapter:
+best_model = AutoExtractor.from_pretrained("fastino/gliner2-base-v1")
+best_model.load_adapter("./output_lora/best")
 ```
+
+## Loading a saved checkpoint
+
+Which call is correct depends on how the checkpoint was saved:
+
+- **Full/merged checkpoint** (`save_adapter_only=False`): the directory already has base weights
+  and adapter deltas merged. `AutoExtractor.from_pretrained(path)` loads it directly.
+- **Adapter-only checkpoint** (`save_adapter_only=True`, the recommended default below): the
+  directory has only the small adapter weights, not the base model. Load the base model first,
+  then attach the adapter: `model = AutoExtractor.from_pretrained(base_model_name)` followed by
+  `model.load_adapter(path)`.
+
+Calling `AutoExtractor.from_pretrained()` directly on an adapter-only checkpoint's path is the
+wrong call for that save mode — match the loading call to how `save_adapter_only` was actually
+set during training, not the other way around.
 
 ## LoRA parameters
 
@@ -105,7 +123,7 @@ TrainingConfig(use_lora=True, lora_r=32, lora_alpha=64, lora_dropout=0.05,
 | Trainable params | ~0.1–1% of model | 100% |
 | Memory | Low | High |
 | Speed | Fast | Slower |
-| Checkpoint size | Small (merged) | Large |
+| Checkpoint size | Small (adapter-only) or large (if merged) | Large |
 | Performance | Good, often comparable | Best |
 | Best for | Limited data, multiple domains/tasks | Large single-domain datasets |
 
@@ -137,7 +155,10 @@ Then load/swap with `model.load_adapter(path)` — see [adapter-switching.md](ad
 2. Target attention layers first (`["encoder.query", "encoder.key", "encoder.value"]`); add
    `"encoder.dense"` or task heads if needed.
 3. Use `task_lr` in `5e-4`–`1e-3` for LoRA.
-4. `save_adapter_only=True` almost always — checkpoints are pre-merged and ready for inference.
+4. `save_adapter_only=True` almost always, for the storage savings — but that means the
+   checkpoint is adapter-only, not pre-merged: load it with `model.load_adapter(path)` on an
+   already-loaded base model (see "Loading a saved checkpoint" above), not
+   `AutoExtractor.from_pretrained(path)` directly.
 5. Version and record adapter metadata (rank, alpha, training date, sample count, eval F1) per
    adapter directory so you can compare revisions later.
 

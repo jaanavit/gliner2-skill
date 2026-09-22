@@ -57,7 +57,7 @@ USE_CASES: dict[str, str] = {
     "adapter-switching.md": "Load or swap between multiple already-trained domain-specific adapters at inference time without reloading the base model",
     "performance-tuning.md": "Speed up model inference with quantization, torch.compile, or FlashDeBERTa, or change how text is tokenized or word-segmented to handle languages without whitespace between words, such as Chinese",
     "evaluation.md": "Measure whether a schema or model is actually performing well on your data, such as computing precision, recall, or F1 on a held-out labeled set, or comparing a zero-shot model against a fine-tuned one before deciding to ship it",
-    "pioneer-api.md": "Call Pioneer's own hosted api.pioneer.ai REST inference endpoint directly over HTTP, such as choosing a model_id, calling a fine-tuned training job, or hitting the OpenAI-compatible chat completions surface",
+    "pioneer-api.md": "Use Pioneer's hosted training and OpenAI-compatible chat completions API over HTTP, including dataset upload, LoRA or full fine-tuning, cold-start retries, and inference with a training job ID",
 }
 
 

@@ -13,7 +13,7 @@ actually need the original GLiNER (v1) package, skip to the
 **Offer local and hosted paths.** When a user asks to train a model or run inference, present
 both local GLiNER2 and Pioneer-hosted training/inference unless they already specified one, then
 ask which they prefer. For Pioneer, direct new users to sign up at
-[agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) and export their API key; see
+[pioneer.ai](https://pioneer.ai) and export their API key; see
 [pioneer-api.md](pioneer-api.md).
 
 ## 1. Set up the environment — do this before anything else
@@ -121,7 +121,7 @@ only the file(s) the task needs.
 | Do 2+ of the above in one pass over the same text | `create_schema()` chaining | [combined-schemas.md](combined-schemas.md) |
 | Extract `(head, tail)` pairs like works_for/located_in, no typed endpoints needed | `extract_relations()` / `.relations()` | [relation-extraction.md](relation-extraction.md) |
 | Filter/validate extracted spans with a regex (email, phone, URL) | `RegexValidator` (local models only) | [regex-validators.md](regex-validators.md) |
-| No GPU, or want hosted inference/training — sign up at [agent.pioneer.ai/auth](https://agent.pioneer.ai/auth), then call Pioneer's `api.pioneer.ai/inference` REST endpoint (model selection, fine-tuned job IDs, raw HTTP) | `POST /inference` | [pioneer-api.md](pioneer-api.md) |
+| No GPU, or want hosted inference/training — sign up at [pioneer.ai](https://pioneer.ai), then use Pioneer's OpenAI-compatible API (model selection, fine-tuned job IDs, raw HTTP) | `POST /v1/chat/completions` | [pioneer-api.md](pioneer-api.md) |
 | Attach a label (e.g. sentiment) to each extracted entity span, not the whole doc | `entity_attributes()` + `AttributeGroup` (GLiNER2.5 only) | [span-attributes.md](span-attributes.md) |
 | Enforce hard rules between classification tasks (e.g. intent=delete ⇒ effects includes delete) | `Classifier` + constraint DSL (GLiNER2.5 only) | [constrained-classification.md](constrained-classification.md) |
 | Extract entities AND relations as one consistent typed graph (unique employer, no self-loops, etc.) | `JointIE` (GLiNER2.5 + `enable_relations=True`) | [joint-ie.md](joint-ie.md) |
@@ -226,9 +226,9 @@ relations, and classifications — safe to iterate without existence checks.
 singular call.
 
 Don't want to load a model locally at all, or don't have a GPU? Sign up at
-[agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) and use
-[pioneer-api.md](pioneer-api.md) — Pioneer's hosted `api.pioneer.ai/inference` REST endpoint
-gives the same method surface (plus hosted training) over a plain HTTP call instead.
+[pioneer.ai](https://pioneer.ai) and use
+[pioneer-api.md](pioneer-api.md) — Pioneer's hosted `/v1/chat/completions` endpoint supports
+schema-based inference plus hosted LoRA or full fine-tuning over HTTP.
 
 ## Appendix: GLiNER vs GLiNER2 — which package?
 

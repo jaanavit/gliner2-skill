@@ -8,7 +8,7 @@ combined-schema inference request shape, batching, retries, and the OpenAI-compa
 
 No Pioneer account yet? Sign up or log in at
 [agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) (Google, GitHub, magic link, or email),
-then get a key from Settings → API Keys.
+then export your API key from Settings → API Keys:
 
 ```bash
 export PIONEER_API_KEY="pio_sk_..."

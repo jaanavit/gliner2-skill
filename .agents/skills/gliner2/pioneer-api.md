@@ -25,9 +25,11 @@ fi
 export PIONEER_API_KEY="pio_sk_..."
 ```
 
-3. If the user does not have a key or account, direct them to
-   [agent.pioneer.ai/auth](https://agent.pioneer.ai/auth). After authentication, have them
-   create a key under Settings → API Keys and export it in their shell.
+3. If the user does not have a key or account, open
+   [agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) with an available browser tool. If no
+   browser tool is available, provide the clickable link and wait for the user to authenticate.
+   After authentication, have them create a key under Settings → API Keys and export it in their
+   shell.
 4. Verify authentication and inspect the available balance with an authenticated endpoint:
 
 ```bash

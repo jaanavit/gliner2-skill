@@ -5,8 +5,8 @@ model selection, inference, training, evaluation, and provenance.
 
 ## Fastino readiness gate
 
-Run this gate only after the user chooses Fastino. If the account is already authenticated,
-funded, and has a working key, skip directly to model discovery.
+Run this gate only after the user chooses Fastino. Detect existing readiness before presenting
+onboarding.
 
 1. Check whether a key is already available in the current session without printing its value:
 
@@ -18,32 +18,38 @@ else
 fi
 ```
 
-2. If it is absent, ask the user to export an existing key in their shell—never ask them to
-   paste the secret into chat:
-
-```bash
-export PIONEER_API_KEY="pio_sk_..."
-```
-
-3. If the user does not have a key or account, open
-   [agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) with an available browser tool. If no
-   browser tool is available, provide the clickable link and wait for the user to authenticate.
-   After authentication, have them create a key under Settings → API Keys and export it in their
-   shell.
-4. Verify authentication and inspect the available balance with an authenticated endpoint:
+2. If it is set, verify authentication and inspect the available balance:
 
 ```bash
 curl "https://api.pioneer.ai/billing/ledger/balance" \
   -H "X-API-Key: $PIONEER_API_KEY"
 ```
 
-   A `401` means authenticate or replace the key. Do not use `GET /base-models` to verify a key:
-   the catalog is public and invalid credentials are treated as anonymous access.
-5. If funding is insufficient, guide the user to
-   [agent.pioneer.ai/billing](https://agent.pioneer.ai/billing) to add credits or adjust their
-   spend limit. Payment details remain user-entered; the agent should guide and then verify,
-   never handle card data.
-6. Discover an inference-capable encoder through `GET /base-models`.
+   - On `200` with sufficient funding, skip the remaining onboarding steps and proceed directly
+     to model discovery.
+   - On `200` with insufficient funding, skip account and key setup; guide the user only to
+     [agent.pioneer.ai/billing](https://agent.pioneer.ai/billing) to add credits or adjust their
+     spend limit.
+   - On `401`, treat the key as missing or invalid and continue to step 3.
+
+   Do not use `GET /base-models` to verify a key: the catalog is public and invalid credentials
+   are treated as anonymous access.
+3. If no usable key is available, ask the user to export an existing key in their shell—never
+   ask them to paste the secret into chat:
+
+```bash
+export PIONEER_API_KEY="pio_sk_..."
+```
+
+4. If the user does not have a key or account, open
+   [agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) with an available browser tool. If no
+   browser tool is available, provide the clickable link and wait for the user to authenticate.
+   After authentication, have them create a key under Settings → API Keys and export it in their
+   shell.
+5. Rerun the authenticated balance check after the user exports a key or adds credits. Payment
+   details remain user-entered; the agent should guide and then verify, never handle card data.
+6. Once authentication and funding are ready, discover an inference-capable encoder through
+   `GET /base-models`.
 
 ## Picking a base model
 

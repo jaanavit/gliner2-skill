@@ -8,7 +8,7 @@ Extract named entities with optional descriptions for precision. Mirrors
 ```python
 from gliner2 import AutoExtractor
 
-extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
+extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1")
 ```
 
 ## Basic extraction

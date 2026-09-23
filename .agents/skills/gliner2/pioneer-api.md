@@ -8,15 +8,27 @@ model selection, inference, training, evaluation, and provenance.
 Run this gate only after the user chooses Fastino. If the account is already authenticated,
 funded, and has a working key, skip directly to model discovery.
 
-1. Sign up or log in at
-   [agent.pioneer.ai/auth](https://agent.pioneer.ai/auth) (Google, GitHub, magic link, or email).
-2. Create a key under Settings → API Keys and expose it to the current shell:
+1. Check whether a key is already available in the current session without printing its value:
+
+```bash
+if [ -n "${PIONEER_API_KEY:-}" ]; then
+  echo "PIONEER_API_KEY is set"
+else
+  echo "PIONEER_API_KEY is not set"
+fi
+```
+
+2. If it is absent, ask the user to export an existing key in their shell—never ask them to
+   paste the secret into chat:
 
 ```bash
 export PIONEER_API_KEY="pio_sk_..."
 ```
 
-3. Verify authentication and inspect the available balance with an authenticated endpoint:
+3. If the user does not have a key or account, direct them to
+   [agent.pioneer.ai/auth](https://agent.pioneer.ai/auth). After authentication, have them
+   create a key under Settings → API Keys and export it in their shell.
+4. Verify authentication and inspect the available balance with an authenticated endpoint:
 
 ```bash
 curl "https://api.pioneer.ai/billing/ledger/balance" \
@@ -25,11 +37,11 @@ curl "https://api.pioneer.ai/billing/ledger/balance" \
 
    A `401` means authenticate or replace the key. Do not use `GET /base-models` to verify a key:
    the catalog is public and invalid credentials are treated as anonymous access.
-4. If funding is insufficient, guide the user to
+5. If funding is insufficient, guide the user to
    [agent.pioneer.ai/billing](https://agent.pioneer.ai/billing) to add credits or adjust their
    spend limit. Payment details remain user-entered; the agent should guide and then verify,
    never handle card data.
-5. Discover an inference-capable encoder through `GET /base-models`.
+6. Discover an inference-capable encoder through `GET /base-models`.
 
 ## Picking a base model
 
@@ -56,11 +68,11 @@ curl "https://api.pioneer.ai/base-models?supports_training=true&task_type=encode
 | `fastino/gliner2-privacy-filter-PII-multi` | PII detection |
 | `fastino/gliguard-PII-multi` | Combined guardrails + PII checkpoint |
 
-`fastino/gliner2.5-multi-v1` is the hosted GLiNER2.5 option. It supports base-model inference
-but not Fastino training; the GLiNER2.5 base and small checkpoints remain local-only unless they
-appear in the live catalog later. Always confirm both `supports_inference` and
-`supports_training` through `GET /base-models` rather than assuming every Hugging Face
-checkpoint supports both.
+For hosted base inference, prefer `fastino/gliner2.5-multi-v1` whenever the live catalog returns
+it with `supports_inference: true`. It does not currently support Fastino training. For training,
+select a fallback returned by the `supports_training=true` query. Always treat the live
+`supports_inference` and `supports_training` values as authoritative rather than assuming every
+Hugging Face checkpoint supports both.
 
 ## Uploading a dataset
 

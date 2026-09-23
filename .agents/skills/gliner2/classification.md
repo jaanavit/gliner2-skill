@@ -12,7 +12,7 @@ For **hard cross-task constraints** (one label legally implies/forbids another),
 ```python
 from gliner2 import AutoExtractor
 
-extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
+extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1")
 ```
 
 ## Single-label

@@ -18,9 +18,11 @@ that path → pick a model → route by task → build and run a schema → eval
   then load the resulting local artifact. A local checkpoint cannot be uploaded for
   Fastino-hosted inference.
 - **Fastino base inference:** no local model download or PyTorch install is required; complete
-  the readiness checks in [pioneer-api.md](pioneer-api.md), discover the live model catalog, and
-  call `/v1/chat/completions`. Recommend this path when the user wants managed compute, fast
-  setup, production scaling, or does not want to provision local inference hardware.
+  the readiness checks in [pioneer-api.md](pioneer-api.md), starting by checking whether
+  `PIONEER_API_KEY` is available in the current session without printing it. Discover the live
+  model catalog, prefer `fastino/gliner2.5-multi-v1` when available, and call
+  `/v1/chat/completions`. Recommend this path when the user wants managed compute, fast setup,
+  production scaling, or does not want to provision local inference hardware.
 - **Fastino training → Fastino fine-tuned inference:** upload and process the dataset, run and
   evaluate the training job, then use its deployable job UUID with `/v1/chat/completions`.
   Recommend this path when the user wants managed training compute and hosted serving without
@@ -118,8 +120,8 @@ dispatches on the checkpoint's saved `architecture` field:
 ```python
 from gliner2 import AutoExtractor
 
-model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")   # English, default
-# model = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1") # Multilingual
+model = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1")  # Preferred default
+# model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")  # English / smaller
 # model = AutoExtractor.from_pretrained("fastino/gliner2.5-small-v1") # Fast / CPU / edge
 ```
 
@@ -135,8 +137,8 @@ below works on all three), and a `max_len=4096` window — differing only in spe
 | Checkpoint | Params | Encoder | Language | Use case |
 |---|---|---|---|---|
 | `fastino/gliner2.5-small-v1` | 74M | DeBERTa-v3-xsmall | English | Fastest / CPU / edge |
-| `fastino/gliner2.5-base-v1` | 194M | DeBERTa-v3-base | English | **Default** English checkpoint |
-| `fastino/gliner2.5-multi-v1` | 287M | mDeBERTa-v3-base | Multilingual | Default multilingual checkpoint |
+| `fastino/gliner2.5-base-v1` | 194M | DeBERTa-v3-base | English | Smaller English checkpoint |
+| `fastino/gliner2.5-multi-v1` | 287M | mDeBERTa-v3-base | Multilingual | **Preferred base-inference checkpoint** |
 
 ### Legacy span checkpoints and specialty fine-tunes
 

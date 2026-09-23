@@ -14,7 +14,7 @@ For structure-only extraction, use the simple dict format directly — no schema
 ```python
 from gliner2 import AutoExtractor
 
-extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
+extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1")
 
 text = "The MacBook Pro costs $1999 and features M3 chip, 16GB RAM, and 512GB storage."
 results = extractor.extract_json(text, {"product": ["name::str", "price", "features"]})

@@ -12,7 +12,7 @@ When you need typed endpoints, per-head uniqueness, or a globally consistent gra
 ```python
 from gliner2 import AutoExtractor
 
-extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
+extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1")
 
 text = "John works for Apple Inc. and lives in San Francisco."
 results = extractor.extract_relations(text, ["works_for", "lives_in"])

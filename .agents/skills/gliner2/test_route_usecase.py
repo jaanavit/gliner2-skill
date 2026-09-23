@@ -107,6 +107,19 @@ def test_skill_documents_hosted_bypass_and_provenance_boundary() -> None:
     assert "A local checkpoint cannot be uploaded" in skill_md
 
 
+def test_skill_prefers_multi_for_base_inference_and_checks_fastino_key() -> None:
+    """The preferred base model and Fastino credential flow must remain explicit."""
+    skill_dir = Path(__file__).parent
+    skill_md = (skill_dir / "SKILL.md").read_text()
+    pioneer_api_md = (skill_dir / "pioneer-api.md").read_text()
+
+    assert "**Preferred base-inference checkpoint**" in skill_md
+    assert 'prefer `fastino/gliner2.5-multi-v1`' in pioneer_api_md
+    assert 'if [ -n "${PIONEER_API_KEY:-}" ]' in pioneer_api_md
+    assert "never ask them to\n   paste the secret into chat" in pioneer_api_md
+    assert "https://agent.pioneer.ai/auth" in pioneer_api_md
+
+
 def test_route_sorts_by_descending_confidence() -> None:
     model = StubModel(
         [

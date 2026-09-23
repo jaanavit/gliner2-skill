@@ -16,7 +16,7 @@ from gliner2 import AutoExtractor
 device = "cuda" if torch.cuda.is_available() else (
     "mps" if torch.backends.mps.is_available() else "cpu"
 )
-model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1", map_location=device)
+model = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1", map_location=device)
 print("GLiNER2 device:", next(model.parameters()).device)
 ```
 
@@ -91,7 +91,7 @@ labels (see the "descriptions beat bare label lists" rule in [SKILL.md](SKILL.md
 assuming the splitter alone gets you English/Spanish-level quality:
 
 ```python
-model = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1", word_splitter="char")
+model = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1", word_splitter="char")
 
 # Or after loading
 model.set_word_splitter("char")

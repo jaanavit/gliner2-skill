@@ -79,7 +79,7 @@ Run it over the test set:
 from gliner2 import AutoExtractor
 from gliner2.training.data import TrainingDataset
 
-extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
+extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1")
 test_data = TrainingDataset.load("test.jsonl")
 
 counts = {"tp": 0, "fp": 0, "fn": 0}
@@ -158,7 +158,7 @@ the fine-tuned model's own training-time validation numbers, and never let eithe
 the test set before this comparison:
 
 ```python
-zero_shot = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
+zero_shot = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1")
 fine_tuned = AutoExtractor.from_pretrained("./my_model/best")
 
 for name, model in [("zero-shot", zero_shot), ("fine-tuned", fine_tuned)]:

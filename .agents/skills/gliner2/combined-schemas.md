@@ -17,7 +17,7 @@ constraints, see [joint-ie.md](joint-ie.md) instead of plain `.relations(...)`.
 ```python
 from gliner2 import AutoExtractor
 
-extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
+extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1")
 
 # Entities + classification
 schema = (

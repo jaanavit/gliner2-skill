@@ -71,7 +71,7 @@ you're editing your copy locally, diff before overwriting.
 
 - **Baseline first, before fine-tuning anything:**
   ```text
-  Using the GLiNER2 skill, run fastino/gliner2.5-base-v1 zero-shot over a sample of my dataset
+  Using the GLiNER2 skill, run fastino/gliner2.5-multi-v1 zero-shot over a sample of my dataset
   at <path> for <task>, and show me where it gets it wrong.
   ```
 - **Escalate to fine-tuning once zero-shot plateaus** — this is the biggest accuracy lever once

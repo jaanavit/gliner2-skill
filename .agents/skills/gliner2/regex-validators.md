@@ -9,7 +9,7 @@ Mirrors
 ```python
 from gliner2 import AutoExtractor, RegexValidator
 
-extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-base-v1")
+extractor = AutoExtractor.from_pretrained("fastino/gliner2.5-multi-v1")
 
 email_validator = RegexValidator(r"^[\w\.-]+@[\w\.-]+\.\w+$")
 schema = (
